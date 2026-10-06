@@ -83,7 +83,13 @@
         .placement-cancel { background:#e5d9b8; color:var(--field-ink); }
         .demolish-cancel { position:fixed; right:18px; bottom:100px; z-index:220; display:none; place-items:center; width:54px; height:54px; border:3px solid #fff; border-radius:50%; background:#b8322a; color:#fff; box-shadow:0 0 0 4px rgba(184,50,42,.35),0 5px 14px var(--field-shadow); font-size:1.7rem; font-weight:bold; cursor:pointer; pointer-events:all; touch-action:manipulation; }
         .demolish-cancel.active { display:grid; }
-        .app-version { position:fixed; right:10px; bottom:4px; z-index:145; max-width:45vw; overflow:hidden; color:rgba(255,255,255,.9); font-size:.68rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.9); pointer-events:none; }
+        .construction-editor { position:fixed; top:calc(12px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:220; display:none; align-items:center; gap:12px; padding:9px 12px 9px 16px; border:1px solid rgba(255,255,255,.28); border-radius:12px; background:rgba(29,51,34,.94); color:#fff; box-shadow:0 5px 14px var(--field-shadow); pointer-events:all; }
+        .construction-editor.active { display:flex; }
+        .construction-editor-title { font-weight:bold; white-space:nowrap; }
+        .construction-editor-cancel { border:0; border-radius:8px; padding:8px 12px; background:#e7eccb; color:var(--field-ink); font:inherit; font-weight:bold; cursor:pointer; }
+        body.construction-mode .ui-overlay > :not(#constructionEditor):not(#demolishCancel):not(.notification) { display:none !important; }
+        body.construction-mode #demolishCancel.active { display:grid; }
+        .app-version { position:fixed; right:10px; bottom:calc(6px + env(safe-area-inset-bottom)); z-index:145; max-width:45vw; overflow:hidden; padding:4px 8px; border:1px solid rgba(255,255,255,.28); border-radius:999px; background:rgba(29,51,34,.68); color:rgba(255,255,255,.94); font-size:.68rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.9); pointer-events:none; }
         .mobile-controls { display:none; }
         .mobile-joystick { position:relative; display:grid; width:100%; height:100%; place-items:center; border:2px solid rgba(255,255,255,.7); border-radius:50%; background:radial-gradient(circle,rgba(245,240,217,.38) 0 42%,rgba(29,51,34,.34) 44% 100%); box-shadow:0 4px 14px rgba(0,0,0,.28),inset 0 0 0 5px rgba(255,255,255,.14); touch-action:none; user-select:none; -webkit-user-select:none; }
         .mobile-joystick::before,.mobile-joystick::after { position:absolute; content:""; background:rgba(255,255,255,.24); pointer-events:none; }
@@ -206,7 +212,7 @@
             <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
             <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
         </div>
-        <div class="app-version" id="appVersion" aria-live="polite">Versão local        </div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.1</div>
         <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
             <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
                 <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
@@ -217,7 +223,11 @@
             <button class="placement-control-btn placement-confirm" id="placementConfirm" type="button" onclick="confirmPlacement()" disabled>Confirmar área</button>
             <button class="placement-control-btn placement-cancel" type="button" onclick="cancelPlacement()">Cancelar</button>
         </div>
-        <button class="demolish-cancel" id="demolishCancel" type="button" onclick="cancelDemolishMode()" aria-label="Cancelar modo demolidor" title="Cancelar demolidor">×</button>
+        <div class="construction-editor" id="constructionEditor" aria-live="polite">
+            <span class="construction-editor-title" id="constructionEditorTitle"></span>
+            <button class="construction-editor-cancel" type="button" onclick="cancelConstructionMode()">Cancelar</button>
+        </div>
+        <button class="demolish-cancel" id="demolishCancel" type="button" onclick="cancelDemolishMode()" aria-label="Sair do modo demolição" title="Sair do modo demolição">🚜</button>
         <div class="shop-menu" id="shopMenu">
             <div class="panel-title">🛒 Loja</div>
             <div class="shop-options">
@@ -239,8 +249,13 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
+const APP_VERSION = '1.0.1';
 const WORLD_GROUND_WIDTH = 240;
 const WORLD_GROUND_DEPTH = 180;
+const ENERGY_CAPACITY = 500;
+const ENERGY_REGEN_PER_SECOND = 5;
+const ENERGY_PLANT_COST = 5;
+const ENERGY_TONIC_AMOUNT = 40;
 const CROP_LABELS = { carrot: 'Cenoura', wheat: 'Trigo', tomato: 'Tomate', corn: 'Milho' };
 const CROP_COSTS = { carrot: 10, wheat: 12, tomato: 18, corn: 15 };
 const CROP_NAMES = { carrot: 'cenoura(s)', wheat: 'trigo(s)', tomato: 'tomate(s)', corn: 'milho(s)' };
@@ -275,7 +290,7 @@ function createInitialMissions() {
 const gameState = {
     coins: 100,
     gems: 5,
-    energy: 100,
+    energy: ENERGY_CAPACITY,
     inventory: { carrot: 0, wheat: 0, tomato: 0, corn: 0, eggs: 0, milk: 0, truffle: 0 },
     seeds: { carrot: 0, wheat: 0, tomato: 0, corn: 0 },
     farmProducts: {
@@ -347,6 +362,7 @@ scene.add(sun.target);
 
 const groundTiles = [];
 const buildables = [];
+const buildingAnchorTiles = new Map();
 const cropMeshes = [];
 const harvestHolograms = new Map();
 const furrowMaterial = new THREE.MeshLambertMaterial({ color: 0x493522 });
@@ -599,7 +615,7 @@ function addDeveloperMoney(event) {
     const amountInCents = Math.round(addedMoney * 100);
     const currentBalanceInCents = Math.round(gameState.coins * 100);
     gameState.coins = (currentBalanceInCents + amountInCents) / 100;
-    gameState.energy = Math.min(100, gameState.energy + addedEnergy);
+    gameState.energy = Math.min(ENERGY_CAPACITY, gameState.energy + addedEnergy);
 
     updateUI();
     amountInput.value = '';
@@ -705,6 +721,7 @@ function saveGameSilent() {
             coins: gameState.coins,
             gems: gameState.gems,
             energy: gameState.energy,
+            energyCapacity: ENERGY_CAPACITY,
             inventory: gameState.inventory,
             seeds: gameState.seeds,
             selectedCrop: gameState.selectedCrop,
@@ -715,11 +732,11 @@ function saveGameSilent() {
             farmProducts: gameState.farmProducts,
             missions: gameState.missions.map((mission) => ({ ...mission })),
             animals: gameState.animals.map((animal) => ({ type: animal.type, x: animal.x, z: animal.z })),
-            buildings: groundTiles.filter((tile) => tile.userData.building).map((tile) => ({
-                x: tile.userData.x,
-                z: tile.userData.z,
-                type: tile.userData.building,
-                cost: tile.userData.buildCost || 0
+            buildings: buildables.map((building) => ({
+                x: building.userData.tile.userData.x,
+                z: building.userData.tile.userData.z,
+                type: building.userData.type,
+                cost: building.userData.cost || 0
             })),
             crops: [...plantedTiles].map((tile) => ({
                 x: tile.userData.x,
@@ -751,7 +768,10 @@ function loadGame() {
         const saveData = JSON.parse(raw);
         gameState.coins = saveData.coins ?? gameState.coins;
         gameState.gems = saveData.gems ?? gameState.gems;
-        gameState.energy = saveData.energy ?? gameState.energy;
+        const savedEnergy = Number(saveData.energy);
+        gameState.energy = Number.isFinite(savedEnergy)
+            ? Math.min(ENERGY_CAPACITY, saveData.energyCapacity ? Math.max(0, savedEnergy) : ENERGY_CAPACITY)
+            : ENERGY_CAPACITY;
         gameState.inventory = { ...gameState.inventory, ...(saveData.inventory || {}) };
         gameState.seeds = { ...gameState.seeds, ...(saveData.seeds || {}) };
         gameState.expansionCells = saveData.expansionCells || [];
@@ -805,8 +825,9 @@ function loadGame() {
         }
 
         for (const data of saveData.buildings || []) {
-            const tile = tileMap.get(`${data.x},${data.z}`);
-            if (!tile || tile.userData.occupied) continue;
+            const key = `${data.x},${data.z}`;
+            const tile = tileMap.get(key) || createBuildingAnchorTile(data.x, data.z);
+            if ((!tile.userData.isExpansion && !tile.userData.isBuildingAnchor) || tile.userData.occupied) continue;
             tile.userData.building = data.type;
             tile.userData.buildCost = data.cost || 0;
             tile.userData.occupied = true;
@@ -845,7 +866,7 @@ function resetGame() {
     localStorage.removeItem('fazendaSave');
     gameState.coins = 100;
     gameState.gems = 5;
-    gameState.energy = 100;
+    gameState.energy = ENERGY_CAPACITY;
     gameState.inventory = { carrot: 0, wheat: 0, tomato: 0, corn: 0, eggs: 0, milk: 0, truffle: 0 };
     gameState.seeds = { carrot: 0, wheat: 0, tomato: 0, corn: 0 };
     gameState.farmProducts = {
@@ -891,6 +912,7 @@ function resetGame() {
     }
     for (const buildable of buildables) scene.remove(buildable);
     buildables.length = 0;
+    buildingAnchorTiles.clear();
     plantedTiles.clear();
     for (const group of Object.values(gameState.farmAreaGroups)) scene.remove(group);
     gameState.farms = { chicken: false, cow: false, pig: false };
@@ -1052,7 +1074,7 @@ function buyShopItem(type) {
         addNotification('Plante algo antes de comprar adubo.', '#f59e0b');
         return;
     }
-    if (type === 'energy' && gameState.energy >= 100) {
+    if (type === 'energy' && gameState.energy >= ENERGY_CAPACITY) {
         addNotification('Sua energia já está cheia.', '#f59e0b');
         return;
     }
@@ -1097,7 +1119,7 @@ function buyShopItem(type) {
         addNotification(fertilized ? `Adubo aplicado em ${fertilized} plantação(ões)!` : 'Adubo comprado; use nas próximas plantações.', '#10b981');
         playSound('coin');
     } else if (type === 'energy') {
-        gameState.energy = Math.min(100, gameState.energy + 40);
+        gameState.energy = Math.min(ENERGY_CAPACITY, gameState.energy + ENERGY_TONIC_AMOUNT);
         addNotification('Tônico usado! Energia +40.', '#10b981');
         playSound('coin');
     }
@@ -1116,6 +1138,7 @@ function getOccupiedLandCells(includeEmptyGround = true) {
     for (const tile of gameState.animalFarmTiles) {
         occupied.add(`${Math.round(tile.userData.x / 1.6)},${Math.round(tile.userData.z / 1.6)}`);
     }
+    for (const key of buildingAnchorTiles.keys()) occupied.add(key);
     return occupied;
 }
 
@@ -1478,7 +1501,7 @@ function plantCropOnTile(tile) {
         return;
     }
 
-    if (gameState.energy < 5) {
+    if (gameState.energy < ENERGY_PLANT_COST) {
         addNotification('Energia insuficiente! Aguarde recarregar ou use um tônico.', '#f59e0b');
         return;
     }
@@ -1495,7 +1518,7 @@ function plantCropOnTile(tile) {
     } else {
         gameState.coins -= cropCost;
     }
-    gameState.energy = Math.max(0, gameState.energy - 5);
+    gameState.energy = Math.max(0, gameState.energy - ENERGY_PLANT_COST);
     tile.userData.occupied = true;
     tile.userData.crop = {
         type: gameState.selectedCrop,
@@ -1685,9 +1708,19 @@ function collectHarvestArea(groupKey) {
     addNotification(`Colheita recolhida: ${details}.`, '#16a34a');
 }
 
+function syncConstructionEditor() {
+    const isBuildMode = gameState.currentMode === 'build' && gameState.selectedBuilding;
+    const isDemolishMode = gameState.currentMode === 'demolish';
+    document.body.classList.toggle('construction-mode', Boolean(isBuildMode || isDemolishMode));
+    document.getElementById('constructionEditor')?.classList.toggle('active', Boolean(isBuildMode));
+    document.getElementById('demolishCancel')?.classList.toggle('active', isDemolishMode);
+    const labels = { barn: 'Celeiro', well: 'Poço', coop: 'Galinheiro', fence: 'Cerca', tree: 'Árvore' };
+    const title = document.getElementById('constructionEditorTitle');
+    if (title && isBuildMode) title.textContent = `🏗️ ${labels[gameState.selectedBuilding] || 'Construção'}`;
+}
+
 function selectBuilding(type) {
     clearPlacementPreview();
-    document.getElementById('demolishCancel')?.classList.remove('active');
     if (gameState.currentMode === 'farm-placement' || gameState.currentMode === 'expand') {
         gameState.pendingFarmPlacement = null;
         if (placementPreviousCameraDistance !== null) finishPlacementMode();
@@ -1695,7 +1728,7 @@ function selectBuilding(type) {
     if (type === 'demolish') {
         gameState.selectedBuilding = null;
         gameState.currentMode = 'demolish';
-        document.getElementById('demolishCancel')?.classList.add('active');
+        syncConstructionEditor();
         addNotification('Demolidor ativado. Clique em uma construção para demolir.');
         playSound('click');
         toggleBuildMenu();
@@ -1712,7 +1745,7 @@ function selectBuilding(type) {
 
     gameState.selectedBuilding = type;
     gameState.currentMode = 'build';
-    document.getElementById('demolishCancel')?.classList.remove('active');
+    syncConstructionEditor();
     addNotification(`Modo de construção: ${type}`);
     playSound('click');
     toggleBuildMenu();
@@ -1779,6 +1812,7 @@ function cancelPlacement() {
     gameState.pendingFarmPlacement = null;
     gameState.selectedBuilding = null;
     finishPlacementMode();
+    syncConstructionEditor();
     clearPlacementPreview();
     updatePlacementControls();
     addNotification('Posicionamento cancelado.', '#f59e0b');
@@ -1912,7 +1946,7 @@ function startPlanting() {
     clearPlacementPreview();
     gameState.currentMode = 'plant';
     gameState.selectedBuilding = null;
-    document.getElementById('demolishCancel')?.classList.remove('active');
+    syncConstructionEditor();
     playSound('click');
     addNotification(`Modo plantio ativado. Plantando: ${CROP_LABELS[gameState.selectedCrop]}.`);
 }
@@ -1922,7 +1956,7 @@ function harvestMode() {
     clearPlacementPreview();
     gameState.currentMode = 'harvest';
     gameState.selectedBuilding = null;
-    document.getElementById('demolishCancel')?.classList.remove('active');
+    syncConstructionEditor();
     playSound('click');
     addNotification('Modo colheita ativado. Clique em uma planta madura.');
 }
@@ -1974,8 +2008,8 @@ function createBuildingMesh(type) {
 
 function buildStructureOnTile(tile, type) {
     if (!tile) return;
-    if (!tile.userData.isExpansion) {
-        addNotification('Construções só podem ser colocadas no terreno novo. Use Expandir primeiro.', '#f59e0b');
+    if (!tile.userData.isExpansion && !tile.userData.isBuildingAnchor) {
+        addNotification('Construções só podem ser colocadas na grama, não nos canteiros.', '#f59e0b');
         return;
     }
     if (!tile || tile.userData.occupied || tile.userData.building) {
@@ -2006,6 +2040,66 @@ function buildStructureOnTile(tile, type) {
     addNotification('Construção concluída!', '#48bb78');
     completeMission('build');
     updateUI();
+}
+
+function createBuildingAnchorTile(x, z) {
+    const key = `${x},${z}`;
+    const existing = buildingAnchorTiles.get(key);
+    if (existing) return existing;
+
+    const tile = new THREE.Object3D();
+    tile.position.set(x * 1.6, 0, z * 1.6);
+    tile.userData = { x, z, key, occupied: false, crop: null, building: null, buildCost: 0, isExpansion: false, isBuildingAnchor: true };
+    buildingAnchorTiles.set(key, tile);
+    return tile;
+}
+
+function getBuildPlacementSelection(point) {
+    const x = Math.round(point.x / 1.6);
+    const z = Math.round(point.z / 1.6);
+    const key = `${x},${z}`;
+    const tile = tileMap.get(key) || buildingAnchorTiles.get(key) || null;
+    const withinWorld = Math.abs(x * 1.6) + 0.75 <= WORLD_GROUND_WIDTH / 2 &&
+        Math.abs(z * 1.6) + 0.75 <= WORLD_GROUND_DEPTH / 2;
+    const reservedForAnimals = gameState.animalFarmTiles.some((farmTile) =>
+        Math.round(farmTile.userData.x / 1.6) === x && Math.round(farmTile.userData.z / 1.6) === z
+    );
+    const cellBounds = new THREE.Box3(
+        new THREE.Vector3(x * 1.6 - 0.75, -0.1, z * 1.6 - 0.75),
+        new THREE.Vector3(x * 1.6 + 0.75, 3.5, z * 1.6 + 0.75)
+    );
+    const blockedByObject = getEnvironmentBlockerBoxes().some((bounds) => bounds.intersectsBox(cellBounds));
+    const isPlantingSoil = tile && !tile.userData.isExpansion && !tile.userData.isBuildingAnchor;
+    const blocked = !withinWorld || reservedForAnimals || isPlantingSoil ||
+        Boolean(tile && (tile.userData.occupied || tile.userData.building || tile.userData.crop)) ||
+        blockedByObject;
+
+    return {
+        mode: 'build',
+        cells: [{ x, z, blocked, tile }],
+        centerX: x,
+        centerZ: z,
+        key: `build:${key}`,
+        valid: !blocked
+    };
+}
+
+function placeBuildingAtPoint(point, type) {
+    const selection = getBuildPlacementSelection(point);
+    if (!selection.valid) {
+        addNotification('Escolha um espaço livre na grama, fora dos canteiros e construções.', '#f59e0b');
+        return;
+    }
+
+    const costs = { barn: 150, well: 100, coop: 200, fence: 20, tree: 30 };
+    if (gameState.coins < costs[type]) {
+        addNotification('Dinheiro insuficiente para construir!', '#ef4444');
+        return;
+    }
+
+    const cell = selection.cells[0];
+    const tile = cell.tile || createBuildingAnchorTile(cell.x, cell.z);
+    buildStructureOnTile(tile, type);
 }
 
 function demolishAnimalFarm(type) {
@@ -2051,6 +2145,7 @@ function demolishStructure(tile) {
     tile.userData.building = null;
     tile.userData.buildCost = 0;
     tile.userData.occupied = false;
+    if (tile.userData.isBuildingAnchor) buildingAnchorTiles.delete(tile.userData.key);
     gameState.coins += refund;
     invalidateEnvironmentBlockers();
     playSound('coin');
@@ -2060,9 +2155,15 @@ function demolishStructure(tile) {
 
 function cancelDemolishMode() {
     if (gameState.currentMode !== 'demolish') return;
+    cancelConstructionMode();
+}
+
+function cancelConstructionMode() {
+    if (!['build', 'demolish'].includes(gameState.currentMode)) return;
     gameState.currentMode = 'normal';
     gameState.selectedBuilding = null;
-    document.getElementById('demolishCancel')?.classList.remove('active');
+    clearPlacementPreview();
+    syncConstructionEditor();
 }
 
 function getTileFromIntersection(intersection) {
@@ -2127,9 +2228,7 @@ function buildGround() {
 
 function createGroundTile(x, z, isExpansion = false) {
     const material = new THREE.MeshLambertMaterial({
-        color: isExpansion
-            ? (x % 2 === z % 2 ? 0x76a94d : 0x699643)
-            : (x % 2 === z % 2 ? 0x75401f : 0x62361b)
+        color: isExpansion ? 0x76a94d : 0x75401f
     });
     const tile = new THREE.Mesh(
         new THREE.BoxGeometry(1.5, 0.2, 1.5),
@@ -2792,10 +2891,12 @@ function beginPlacementMode(mode) {
         cameraDistance = Math.max(cameraDistance, 35);
     }
     gameState.currentMode = mode;
+    syncConstructionEditor();
 }
 
 function finishPlacementMode() {
     gameState.currentMode = 'normal';
+    syncConstructionEditor();
     if (placementPreviousCameraDistance !== null) {
         cameraDistance = placementPreviousCameraDistance;
         placementPreviousCameraDistance = null;
@@ -2880,6 +2981,25 @@ function processCanvasTap(event) {
         }
         return;
     }
+    if (gameState.currentMode === 'build' && gameState.selectedBuilding) {
+        const placementPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(placementPlane, placementPoint)) {
+            placeBuildingAtPoint(placementPoint, gameState.selectedBuilding);
+        }
+        return;
+    }
+    if (gameState.currentMode === 'demolish') {
+        const demolishHits = raycaster.intersectObjects(
+            [...buildables, ...groundTiles, ...gameState.animalFarmTiles],
+            true
+        );
+        if (demolishHits.length) {
+            handleTileClick(demolishHits[0]);
+        } else {
+            addNotification('Clique em uma construção para demolir.', '#f59e0b');
+        }
+        return;
+    }
     const allTiles = [...groundTiles, ...gameState.animalFarmTiles];
     const hits = raycaster.intersectObjects(allTiles);
     if (hits.length) handleTileClick(hits[0]);
@@ -2959,7 +3079,7 @@ window.addEventListener('pointermove', (event) => {
             draggedPlantTiles.add(tile.userData.key);
             const cropCost = CROP_COSTS[gameState.selectedCrop] || 10;
             if (!tile.userData.occupied && !tile.userData.building &&
-                gameState.energy >= 5 &&
+                gameState.energy >= ENERGY_PLANT_COST &&
                 (gameState.seeds[gameState.selectedCrop] > 0 || gameState.coins >= cropCost)) {
                 plantCropOnTile(tile);
             }
@@ -2974,6 +3094,25 @@ window.addEventListener('pointermove', (event) => {
             clearPlacementPreview();
         }
         canvas.style.cursor = 'crosshair';
+        return;
+    }
+    if (gameState.currentMode === 'build' && gameState.selectedBuilding) {
+        const placementPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(placementPlane, placementPoint)) {
+            const selection = getBuildPlacementSelection(placementPoint);
+            setPlacementPreview(selection);
+            canvas.style.cursor = selection.valid ? 'crosshair' : 'not-allowed';
+        } else {
+            clearPlacementPreview();
+        }
+        return;
+    }
+    if (gameState.currentMode === 'demolish') {
+        const hits = raycaster.intersectObjects(
+            [...buildables, ...groundTiles, ...gameState.animalFarmTiles],
+            true
+        );
+        canvas.style.cursor = hits.length ? 'pointer' : 'not-allowed';
         return;
     }
     clearPlacementPreview();
@@ -3165,6 +3304,11 @@ function movePlayer() {
 function animate() {
     requestAnimationFrame(animate);
     const now = performance.now();
+    const previousEnergy = Math.floor(gameState.energy);
+    const elapsedSeconds = gameState.lastTime ? Math.min((now - gameState.lastTime) / 1000, 0.25) : 0;
+    gameState.lastTime = now;
+    gameState.energy = Math.min(ENERGY_CAPACITY, gameState.energy + elapsedSeconds * ENERGY_REGEN_PER_SECOND);
+    if (Math.floor(gameState.energy) !== previousEnergy) updateUI();
     updateCropGrowth();
     updateHarvestHolograms(now);
     updateFarmHolograms(now);
@@ -3187,7 +3331,7 @@ async function showActiveAppVersion() {
     if (!label) return;
 
     if (!window.Capacitor?.isNativePlatform?.()) {
-        label.textContent = location.protocol === 'file:' ? 'Versão local' : 'Versão web';
+        label.textContent = `Versão ${APP_VERSION}`;
         return;
     }
 
@@ -3201,8 +3345,8 @@ async function showActiveAppVersion() {
     try {
         const current = await updater.current();
         const bundle = current.bundle;
-        const version = bundle.id === 'builtin' ? current.native : bundle.version;
-        label.textContent = `Versão ${version || 'nativa'}`;
+        const activeBundle = bundle.id === 'builtin' ? current.native : bundle.version;
+        label.textContent = `Versão ${APP_VERSION}${activeBundle ? ` · ${activeBundle}` : ''}`;
     } catch (error) {
         label.textContent = 'Versão indisponível';
         console.error('Could not read the active app version.', error);

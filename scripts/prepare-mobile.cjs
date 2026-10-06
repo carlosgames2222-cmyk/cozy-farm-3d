@@ -2,7 +2,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
-const source = path.join(root, 'fazenda.html.html');
+const source = fs.existsSync(path.join(root, 'fazenda.html.html'))
+    ? path.join(root, 'fazenda.html.html')
+    : path.join(root, 'fazenda.html');
 const pwaRoot = path.join(root, 'pwa');
 const webRoot = path.join(root, 'www');
 const vendorRoot = path.join(webRoot, 'vendor');
