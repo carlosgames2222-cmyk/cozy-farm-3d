@@ -1,0 +1,16 @@
+{
+  "appId": "com.cozyfarm.fazenda3d",
+  "appName": "Cozy Farm 3D",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorUpdater": {
+      "appId": "com.cozyfarm.fazenda3d",
+      "autoUpdate": "atBackground",
+      "defaultChannel": "production",
+      "version": "1.0.0"
+    }
+  }
+}

@@ -1,0 +1,3234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cozy Farm 3D</title>
+    <meta name="theme-color" content="#236b35">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cozy Farm 3D">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/farm-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icons/farm-icon-180.png">
+    <style>
+        :root { --field-ink:#1d3322; --field-forest:#236b35; --field-leaf:#4b9b38; --field-leaf-light:#e8f2cc; --field-paper:#f5f0d9; --field-paper-edge:#d6bc7f; --field-shadow: rgba(24,43,25,.32); }
+        * { box-sizing:border-box; }
+        html, body { margin:0; width:100%; height:100%; overflow:hidden; font-family:'Trebuchet MS','Segoe UI',sans-serif; background: linear-gradient(180deg,#70b8d6 0%,#a7c979 100%); color:var(--field-ink); }
+        #gameCanvas { display:block; width:100vw; height:100vh; touch-action:none; }
+        .ui-overlay { position:fixed; inset:0; pointer-events:none; z-index:100; }
+        .top-bar { display:flex; justify-content:center; gap:12px; padding:18px; pointer-events:all; }
+        .resource-box { background:rgba(43,60,43,.92); border:1px solid rgba(244,239,220,.32); color:var(--field-paper); padding:10px 17px; border-radius:14px; display:flex; align-items:center; gap:10px; font-weight:bold; font-size:1.2em; box-shadow:0 5px 14px var(--field-shadow); }
+        .resource-icon { font-size:1.5em; }
+        .resource-value { color:#fff9e9; }
+        .settings-btn, .mobile-landscape-btn, .side-tab-btn, .crop-menu-toggle, .direction-button, .action-btn, .crop-buy-btn, .crop-plant-btn, .shop-option, .build-option { pointer-events:all; }
+        .settings-btn { position:fixed; top:20px; right:20px; z-index:150; width:48px; height:48px; display:grid; place-items:center; border:1px solid var(--field-paper-edge); border-radius:50%; background:var(--field-paper); color:var(--field-forest); box-shadow:0 5px 14px var(--field-shadow); font-size:1.4rem; cursor:pointer; }
+        #developerToggle { right: 82px; border-radius: 14px; }
+        .mobile-landscape-btn { position:fixed; top:20px; left:76px; z-index:150; width:48px; height:48px; border:1px solid var(--field-paper-edge); border-radius:14px; background:var(--field-paper); color:var(--field-forest); box-shadow:0 5px 14px var(--field-shadow); font-size:1.35rem; cursor:pointer; }
+        .settings-panel, .developer-panel, .side-panel, .shop-menu, .build-menu, .crop-menu { position:fixed; background:rgba(244,239,220,.97); border:1px solid var(--field-paper-edge); border-radius:14px; box-shadow:0 10px 26px var(--field-shadow); pointer-events:all; }
+        .settings-panel { top:80px; right:20px; padding:14px; display:none; min-width:220px; z-index:180; }
+        .settings-panel.active { display:block; }
+        .settings-btn-action { width:100%; background:#e4ead8; color:var(--field-forest); border:1px solid #c8d4b8; border-radius:9px; padding:10px 12px; margin-top:8px; font-weight:bold; cursor:pointer; }
+        .developer-panel { top:80px; left:20px; z-index:180; display:none; width:min(250px, calc(100vw - 32px)); padding:14px; }
+        .developer-panel.active { display:block; }
+        .developer-title { color:var(--field-forest); font-weight:bold; }
+        .developer-form label { display:block; margin-top:9px; color:var(--field-ink); font-size:.85rem; font-weight:bold; }
+        .developer-form input { width:100%; margin-top:4px; padding:9px 10px; border:1px solid var(--field-paper-edge); border-radius:7px; background:#fffdf5; color:var(--field-ink); font:inherit; }
+        .developer-status { min-height:1.2em; margin-top:8px; color:#8f352b; font-size:.82rem; }
+        .settings-tip { margin-top:12px; padding:10px 12px; border-radius:10px; background:#e8edcc; color:#2c4e2d; font-size:.85rem; line-height:1.45; }
+        .side-tabs { position:fixed; right:20px; top:100px; display:flex; flex-direction:column; gap:8px; pointer-events:all; z-index:190; }
+        .side-tab-btn { width:46px; height:46px; border:1px solid var(--field-paper-edge); border-radius:12px; background:var(--field-paper); color:var(--field-forest); box-shadow:0 4px 12px var(--field-shadow); font-size:1.25rem; cursor:pointer; }
+        .side-tab-btn.active { background:#d5ed83; outline:2px solid #4c9136; }
+        .side-panel { right:78px; top:100px; width:280px; padding:16px; max-height:calc(100vh - 140px); overflow-y:auto; display:none; z-index:165; }
+        .side-panel.active { display:block; }
+        .panel-title { font-size:1.3em; font-weight:bold; color:var(--field-ink); margin-bottom:15px; padding-bottom:10px; border-bottom:2px solid #8b9a67; }
+        .inventory-item { display:flex; justify-content:space-between; align-items:center; padding:12px; background:#e7eccb; border:1px solid rgba(105,133,59,.24); border-radius:9px; margin-bottom:8px; font-weight:600; }
+        .mission-item { background:#ece8cd; padding:13px; border-radius:9px; margin-bottom:10px; border-left:4px solid #8b9a67; }
+        .animal-item { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#e8eadb; border-radius:12px; margin-bottom:8px; font-weight:600; }
+        .mission-title { font-weight:bold; color:var(--field-ink); margin-bottom:5px; }
+        .mission-progress { margin-top:8px; font-size:.9em; color:#4a5568; }
+        .mission-reward { color:#32823b; font-weight:bold; }
+        .crop-selector { position:fixed; bottom:95px; left:50%; transform:translateX(-50%); display:block; pointer-events:all; z-index:155; }
+        .crop-selector-mobile { display:none; }
+        .selected-crop { display:flex; align-items:center; gap:8px; min-width:150px; color:#2d3748; }
+        .selected-crop-icon { font-size:1.3rem; }
+        .selected-crop-info strong,.selected-crop-info small { display:block; }
+        .selected-crop-info small { margin-top:2px; color:#64748b; font-size:.72rem; }
+        .crop-menu-toggle { width:52px; height:52px; border:2px solid var(--field-paper-edge); border-radius:50%; background:var(--field-paper); color:var(--field-forest); box-shadow:0 5px 14px var(--field-shadow); font-size:1.7rem; font-weight:700; line-height:1; cursor:pointer; }
+        .crop-menu { position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); display:none; grid-template-columns:1fr; gap:6px; width:310px; max-width:calc(100vw - 24px); max-height:min(45vh,300px); overflow-y:auto; padding:8px; border-radius:14px; background:rgba(255,255,255,.98); box-shadow:0 8px 22px rgba(0,0,0,.2); }
+        .crop-menu.active { display:grid; }
+        .crop-menu-mobile { position:fixed; top:50%; bottom:auto; left:50%; transform:translate(-50%,-50%); width:min(340px, calc(100vw - 24px)); max-height:calc(100vh - 24px); z-index:210; }
+        .crop-option { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; padding:9px 10px; border:1px solid #d9e0cd; border-radius:10px; background:#fffdf5; color:var(--field-ink); font:inherit; text-align:left; }
+        .crop-option.active { border-color: var(--field-leaf); background:#eef5d8; }
+        .crop-option-main { display:flex; align-items:center; gap:8px; font-weight:700; }
+        .crop-option-stock { display:block; margin-top:3px; color:#647466; font-size:.72rem; font-weight:normal; }
+        .crop-option-details { color:#64748b; font-size:.75rem; text-align:right; }
+        .crop-option-actions { display:flex; align-items:center; gap:5px; }
+        .crop-buy-btn, .crop-plant-btn { min-width:46px; min-height:38px; padding:5px 8px; border:0; border-radius:9px; font:inherit; font-size:.82rem; font-weight:bold; cursor:pointer; }
+        .crop-buy-btn { background:#f3e6bb; color:#795618; }
+        .crop-plant-btn { width:38px; background:#278b43; color:#fff; font-size:1.4rem; }
+        .crop-plant-btn:disabled { display:none; }
+        .action-btn { background:var(--field-forest); color:white; border:1px solid rgba(255,255,255,.22); padding:13px 19px; border-radius:13px; font-size:.98rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 10px var(--field-shadow); display:flex; align-items:center; gap:8px; }
+        .action-btn.plant { background:#278b43; }
+        .action-btn.build { background:#d98208; }
+        .action-btn.harvest { background:#c63b2d; }
+        .action-btn.shop { background:#658726; }
+        .bottom-bar { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; pointer-events:all; align-items:center; }
+        .placement-controls { position:fixed; bottom:88px; left:50%; transform:translateX(-50%); z-index:175; display:none; align-items:center; gap:10px; max-width:calc(100vw - 24px); padding:10px 12px; border:1px solid var(--field-paper-edge); border-radius:12px; background:rgba(244,239,220,.97); box-shadow:0 5px 14px var(--field-shadow); pointer-events:all; }
+        .placement-controls.active { display:flex; }
+        .placement-message { font-size:.85rem; font-weight:bold; }
+        .placement-control-btn { border:0; border-radius:8px; padding:9px 12px; font:inherit; font-weight:bold; cursor:pointer; }
+        .placement-confirm { background:#278b43; color:white; }
+        .placement-confirm:disabled { background:#82927c; cursor:not-allowed; opacity:.72; }
+        .placement-cancel { background:#e5d9b8; color:var(--field-ink); }
+        .demolish-cancel { position:fixed; right:18px; bottom:100px; z-index:220; display:none; place-items:center; width:54px; height:54px; border:3px solid #fff; border-radius:50%; background:#b8322a; color:#fff; box-shadow:0 0 0 4px rgba(184,50,42,.35),0 5px 14px var(--field-shadow); font-size:1.7rem; font-weight:bold; cursor:pointer; pointer-events:all; touch-action:manipulation; }
+        .demolish-cancel.active { display:grid; }
+        .app-version { position:fixed; right:10px; bottom:4px; z-index:145; max-width:45vw; overflow:hidden; color:rgba(255,255,255,.9); font-size:.68rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.9); pointer-events:none; }
+        .mobile-controls { display:none; }
+        .mobile-joystick { position:relative; display:grid; width:100%; height:100%; place-items:center; border:2px solid rgba(255,255,255,.7); border-radius:50%; background:radial-gradient(circle,rgba(245,240,217,.38) 0 42%,rgba(29,51,34,.34) 44% 100%); box-shadow:0 4px 14px rgba(0,0,0,.28),inset 0 0 0 5px rgba(255,255,255,.14); touch-action:none; user-select:none; -webkit-user-select:none; }
+        .mobile-joystick::before,.mobile-joystick::after { position:absolute; content:""; background:rgba(255,255,255,.24); pointer-events:none; }
+        .mobile-joystick::before { width:1px; height:76%; }
+        .mobile-joystick::after { width:76%; height:1px; }
+        .mobile-joystick-knob { position:absolute; z-index:1; width:44%; height:44%; border:2px solid rgba(255,255,255,.85); border-radius:50%; background:radial-gradient(circle at 35% 30%,#fff8dc,#78ac53 72%,#39703a); box-shadow:0 3px 9px rgba(0,0,0,.4); pointer-events:none; transform:translate(0,0); }
+        .shop-menu, .build-menu { bottom:100px; left:50%; transform:translateX(-50%); display:none; z-index:160; padding:16px; }
+        .shop-menu { max-width:min(520px, calc(100vw - 32px)); max-height:calc(100vh - 140px); overflow-y:auto; }
+        .shop-menu.active, .build-menu.active { display:block; }
+        .shop-options, .build-options { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+        .shop-option, .build-option { background:#e7eccb; padding:13px; border-radius:10px; text-align:center; cursor:pointer; transition:transform .18s ease, background .18s ease; border:2px solid transparent; }
+        .shop-option:hover, .build-option:hover { background:#d5ed83; border-color:#4c9136; transform:translateY(-2px); }
+        .shop-option-icon, .build-option-icon { font-size:2em; margin-bottom:5px; }
+        .shop-option-name, .build-option-name { font-weight:bold; font-size:.9em; margin-bottom:5px; }
+        .shop-option-cost, .build-option-cost { color:#9a6a2e; font-weight:bold; }
+        .notification { position:fixed; top:64px; left:12px; background:var(--field-forest); color:white; padding:9px 14px; border-radius:9px; box-shadow:0 5px 14px var(--field-shadow); z-index:200; font-weight:bold; font-size:.88rem; pointer-events:all; animation: slideIn .3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(-30px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+        @media (max-width: 900px), (pointer: coarse) { .crop-selector{display:none;} .crop-selector-mobile { position:fixed; bottom:calc(57px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; justify-content:center; pointer-events:all; z-index:155; }
+            .placement-controls { bottom:176px; left:8px; right:8px; transform:none; justify-content:center; flex-wrap:wrap; }
+            .mobile-controls { position:fixed; left:14px; top:50%; z-index:155; display:block; width:clamp(76px, 17vw, 92px); height:clamp(76px, 17vw, 92px); transform:translateY(-50%); pointer-events:all; touch-action:none; }
+            .crop-menu-mobile .crop-option { border:2px solid transparent; background:#f3f4f6; }
+            .crop-menu-mobile .crop-option.active { border-color:#71945b; background:var(--field-leaf-light); }
+            .crop-menu-mobile .crop-option { min-height:44px; padding:7px 9px; font-size:.8rem; }
+            .crop-menu-mobile .crop-option-details { font-size:.72rem; line-height:1.25; }
+            .crop-selector-mobile .crop-menu-toggle { width:auto; min-width:118px; height:36px; padding:0 12px; border:1px solid rgba(255,255,255,.45); border-radius:11px; background:#216e38; color:#fff; box-shadow:0 3px 9px var(--field-shadow); font-size:.82rem; font-weight:700; }
+            .crop-selector-mobile .crop-menu-toggle:active { background:#4b9b38; }
+            .shop-options { grid-template-columns:repeat(2,minmax(90px,1fr)); }
+            .top-bar { justify-content:flex-start; gap:3px; padding:calc(6px + env(safe-area-inset-top)) 82px 4px 5px; }
+            .resource-box { flex:1 1 0; min-width:0; justify-content:center; gap:2px; padding:4px 3px; border-radius:9px; font-size:.68em; }
+            .resource-icon { font-size:1em; }
+            .settings-btn { top:calc(6px + env(safe-area-inset-top)); right:5px; width:32px; height:32px; font-size:1rem; }
+            #developerToggle { right:42px; }
+            .bottom-bar { bottom:calc(5px + env(safe-area-inset-bottom)); width:calc(100vw - 10px); flex-wrap:nowrap; justify-content:center; gap:4px; }
+            .bottom-bar .action-btn { min-width:0; min-height:34px; flex:1 1 0; justify-content:center; padding:5px 3px; border-radius:9px; font-size:.66rem; gap:3px; box-shadow:0 2px 6px var(--field-shadow); }
+            .side-tabs { top:calc(52px + env(safe-area-inset-top)); right:5px; gap:4px; }
+            .side-tab-btn { width:32px; height:32px; border-radius:9px; font-size:1rem; }
+            .side-panel { top:calc(52px + env(safe-area-inset-top)); right:42px; width:min(250px, calc(100vw - 54px)); max-height:calc(100vh - 66px); padding:9px; }
+            .app-version { right:4px; bottom:calc(1px + env(safe-area-inset-bottom)); font-size:.52rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div class="ui-overlay">
+        <div class="top-bar">
+            <div class="resource-box"><span class="resource-icon">💰</span><span class="resource-value" id="coins">100</span></div>
+            <div class="resource-box"><span class="resource-icon">💎</span><span class="resource-value" id="gems">5</span></div>
+            <div class="resource-box"><span class="resource-icon">⚡</span><span class="resource-value" id="energy">100</span></div>
+        </div>
+        <button class="settings-btn" id="developerToggle" type="button" onclick="toggleDeveloperPanel()" title="Modo desenvolvedor" aria-label="Modo desenvolvedor">🛠️</button>
+        <section class="developer-panel" id="developerPanel" aria-hidden="true">
+            <div class="developer-title">🛠️ Desenvolvedor</div>
+            <form class="developer-form" id="developerMoneyForm" onsubmit="addDeveloperMoney(event)">
+                <label for="developerMoneyAmount">Adicionar dinheiro</label>
+                <input id="developerMoneyAmount" type="text" inputmode="decimal" placeholder="Ex.: 50,25" autocomplete="off">
+                <label for="developerEnergyAmount">Adicionar energia</label>
+                <input id="developerEnergyAmount" type="text" inputmode="decimal" placeholder="Ex.: 20" autocomplete="off">
+                <button class="settings-btn-action" type="submit">Adicionar saldo e energia</button>
+            </form>
+            <p class="developer-status" id="developerStatus" role="status" aria-live="polite"></p>
+        </section>
+        <button class="settings-btn" onclick="toggleSettings()" title="Configurações" aria-label="Configurações">⚙️</button>
+        <div class="settings-panel" id="settingsPanel">
+            <button class="settings-btn-action" onclick="saveGame()">💾 Salvar</button>
+            <button class="settings-btn-action" onclick="resetGame()">🔄 Reiniciar</button>
+            <div class="settings-tip">
+                <strong>💡 Dica de controles</strong>
+                <span>W / seta para cima: andar para a frente</span>
+                <span>S / seta para baixo: andar para trás</span>
+                <span>A: girar para a direita e D: girar para a esquerda</span>
+                <span>Celular: analógico; cima/baixo anda, esquerda/direita vira</span>
+                <span>Setas esquerda/direita: virar no sentido indicado</span>
+                <span>Clique: interagir</span>
+                <span>Scroll: zoom</span>
+                <span>Pressione e arraste o scroll: girar a câmera</span>
+            </div>
+        </div>
+        <div class="side-tabs" role="tablist" aria-label="Painéis da fazenda">
+            <button class="side-tab-btn" role="tab" aria-label="Inventário" title="Inventário" aria-controls="inventoryPanel" aria-selected="false" onclick="toggleSideTab('inventoryPanel', this)">🧺</button>
+            <button class="side-tab-btn" role="tab" aria-label="Animais" title="Animais" aria-controls="animalsPanel" aria-selected="false" onclick="toggleSideTab('animalsPanel', this)">🐔</button>
+            <button class="side-tab-btn" role="tab" aria-label="Missões" title="Missões" aria-controls="missionsPanel" aria-selected="false" onclick="toggleSideTab('missionsPanel', this)">🎯</button>
+        </div>
+        <section class="side-panel" id="inventoryPanel" role="tabpanel" aria-hidden="true">
+            <div class="panel-title">🧺 Inventário</div>
+            <div class="inventory-item"><span>🥕 Cenouras</span> <strong id="inv-carrot">0</strong></div>
+            <div class="inventory-item"><span>🌾 Trigo</span> <strong id="inv-wheat">0</strong></div>
+            <div class="inventory-item"><span>🍅 Tomates</span> <strong id="inv-tomato">0</strong></div>
+            <div class="inventory-item"><span>🌽 Milho</span> <strong id="inv-corn">0</strong></div>
+            <div class="inventory-item"><span>🥚 Ovos</span> <strong id="inv-eggs">0</strong></div>
+            <div class="inventory-item"><span>🥛 Leite</span> <strong id="inv-milk">0</strong></div>
+            <div class="inventory-item"><span>🍄 Trufas</span> <strong id="inv-truffle">0</strong></div>
+            <div class="inventory-item"><span>🌱 Sementes</span> <strong id="seed-carrot">0</strong></div>
+            <div class="inventory-item"><span>🌾 Sementes</span> <strong id="seed-wheat">0</strong></div>
+            <div class="inventory-item"><span>🍅 Sementes</span> <strong id="seed-tomato">0</strong></div>
+            <div class="inventory-item"><span>🌽 Sementes</span> <strong id="seed-corn">0</strong></div>
+        </section>
+        <section class="side-panel" id="animalsPanel" role="tabpanel" aria-hidden="true"><div class="panel-title" style="margin-top:20px;">🐔 Animais</div><div id="animalsList"></div></section>
+        <section class="side-panel" id="missionsPanel" role="tabpanel" aria-hidden="true"><div class="panel-title" style="margin-top:20px;">🎯 Missões</div><div id="missionsList"></div></section>
+        <div class="crop-selector" id="cropSelectorDesktop">
+            <button class="crop-menu-toggle" id="cropMenuToggle" type="button" onclick="toggleCropMenu()" aria-label="Abrir sementes" aria-expanded="false">🌱</button>
+            <div class="crop-menu" id="cropMenuDesktop" aria-label="Sementes disponíveis">
+                <div class="panel-title">🌱 Sementes disponíveis</div>
+                <div class="crop-option active" data-crop="carrot"><span class="crop-option-main"><span>🥕</span><span>Cenoura<small class="crop-option-stock" data-seed-count="carrot"></small></span></span><span class="crop-option-actions"><button class="crop-buy-btn" type="button" onclick="buyCropPack('carrot')" title="Comprar 5 sementes de cenoura">💰 25</button><button class="crop-plant-btn" type="button" onclick="plantSelectedCrop('carrot')" data-plant-crop="carrot" aria-label="Plantar cenoura">+</button></span></div>
+                <div class="crop-option" data-crop="wheat"><span class="crop-option-main"><span>🌾</span><span>Trigo<small class="crop-option-stock" data-seed-count="wheat"></small></span></span><span class="crop-option-actions"><button class="crop-buy-btn" type="button" onclick="buyCropPack('wheat')" title="Comprar 5 sementes de trigo">💰 30</button><button class="crop-plant-btn" type="button" onclick="plantSelectedCrop('wheat')" data-plant-crop="wheat" aria-label="Plantar trigo">+</button></span></div>
+                <div class="crop-option" data-crop="tomato"><span class="crop-option-main"><span>🍅</span><span>Tomate<small class="crop-option-stock" data-seed-count="tomato"></small></span></span><span class="crop-option-actions"><button class="crop-buy-btn" type="button" onclick="buyCropPack('tomato')" title="Comprar 5 sementes de tomate">💰 35</button><button class="crop-plant-btn" type="button" onclick="plantSelectedCrop('tomato')" data-plant-crop="tomato" aria-label="Plantar tomate">+</button></span></div>
+                <div class="crop-option" data-crop="corn"><span class="crop-option-main"><span>🌽</span><span>Milho<small class="crop-option-stock" data-seed-count="corn"></small></span></span><span class="crop-option-actions"><button class="crop-buy-btn" type="button" onclick="buyCropPack('corn')" title="Comprar 5 sementes de milho">💰 40</button><button class="crop-plant-btn" type="button" onclick="plantSelectedCrop('corn')" data-plant-crop="corn" aria-label="Plantar milho">+</button></span></div>
+            </div>
+        </div>
+        <div class="crop-selector-mobile" id="cropSelectorMobile">
+            <button class="crop-menu-toggle" id="mobileCropMenuToggle" type="button" onclick="toggleCropMenu()" aria-label="Escolher semente" aria-expanded="false">🌱 Sementes</button>
+        </div>
+        <div class="crop-menu crop-menu-mobile" id="cropMenuMobile" role="listbox" aria-label="Escolha uma cultura">
+            <button class="crop-option active" type="button" data-mobile-crop="carrot" onclick="selectCrop('carrot')"><span class="crop-option-main"><span>🥕</span><span>Cenoura</span></span><span class="crop-option-details">Plantio: 💰 10<br><span data-mobile-seed-count="carrot">0 sementes</span></span></button>
+            <button class="crop-option" type="button" data-mobile-crop="wheat" onclick="selectCrop('wheat')"><span class="crop-option-main"><span>🌾</span><span>Trigo</span></span><span class="crop-option-details">Plantio: 💰 12<br><span data-mobile-seed-count="wheat">0 sementes</span></span></button>
+            <button class="crop-option" type="button" data-mobile-crop="tomato" onclick="selectCrop('tomato')"><span class="crop-option-main"><span>🍅</span><span>Tomate</span></span><span class="crop-option-details">Plantio: 💰 18<br><span data-mobile-seed-count="tomato">0 sementes</span></span></button>
+            <button class="crop-option" type="button" data-mobile-crop="corn" onclick="selectCrop('corn')"><span class="crop-option-main"><span>🌽</span><span>Milho</span></span><span class="crop-option-details">Plantio: 💰 15<br><span data-mobile-seed-count="corn">0 sementes</span></span></button>
+        </div>
+        <div class="bottom-bar">
+            <button class="action-btn plant" onclick="startPlanting()"><span>🌱</span> Plantar</button>
+            <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
+            <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
+        </div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão local        </div>
+        <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
+            <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
+                <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
+            </div>
+        </div>
+        <div class="placement-controls" id="placementControls">
+            <span class="placement-message" id="placementMessage">Mova o cursor para selecionar a área.</span>
+            <button class="placement-control-btn placement-confirm" id="placementConfirm" type="button" onclick="confirmPlacement()" disabled>Confirmar área</button>
+            <button class="placement-control-btn placement-cancel" type="button" onclick="cancelPlacement()">Cancelar</button>
+        </div>
+        <button class="demolish-cancel" id="demolishCancel" type="button" onclick="cancelDemolishMode()" aria-label="Cancelar modo demolidor" title="Cancelar demolidor">×</button>
+        <div class="shop-menu" id="shopMenu">
+            <div class="panel-title">🛒 Loja</div>
+            <div class="shop-options">
+                <div class="shop-option" onclick="buyShopItem('carrotSeeds')"><div class="shop-option-icon">🥕</div><div class="shop-option-name">5 sementes de cenoura</div><div class="shop-option-cost">💰 25</div></div>
+                <div class="shop-option" onclick="buyShopItem('wheatSeeds')"><div class="shop-option-icon">🌾</div><div class="shop-option-name">5 sementes de trigo</div><div class="shop-option-cost">💰 30</div></div>
+                <div class="shop-option" onclick="buyShopItem('tomatoSeeds')"><div class="shop-option-icon">🍅</div><div class="shop-option-name">5 sementes de tomate</div><div class="shop-option-cost">💰 35</div></div>
+                <div class="shop-option" onclick="buyShopItem('cornSeeds')"><div class="shop-option-icon">🌽</div><div class="shop-option-name">5 sementes de milho</div><div class="shop-option-cost">💰 40</div></div>
+                <div class="shop-option" onclick="buyShopItem('chickenFarm')"><div class="shop-option-icon">🐔</div><div class="shop-option-name">Fazenda de galinhas + 1 ave</div><div class="shop-option-cost">💰 100</div></div>
+                <div class="shop-option" onclick="buyShopItem('cowFarm')"><div class="shop-option-icon">🐄</div><div class="shop-option-name">Fazenda de vacas + 1 vaca</div><div class="shop-option-cost">💰 160</div></div>
+                <div class="shop-option" onclick="buyShopItem('pigFarm')"><div class="shop-option-icon">🐖</div><div class="shop-option-name">Fazenda de porcos + 1 porco</div><div class="shop-option-cost">💰 130</div></div>
+                <div class="shop-option" onclick="buyShopItem('chicken')"><div class="shop-option-icon">🐔</div><div class="shop-option-name">Comprar galinha</div><div class="shop-option-cost">💰 80</div></div>
+                <div class="shop-option" onclick="buyShopItem('cow')"><div class="shop-option-icon">🐄</div><div class="shop-option-name">Comprar vaca</div><div class="shop-option-cost">💰 140</div></div>
+                <div class="shop-option" onclick="buyShopItem('pig')"><div class="shop-option-icon">🐖</div><div class="shop-option-name">Comprar porco</div><div class="shop-option-cost">💰 90</div></div>
+                <div class="shop-option" onclick="buyShopItem('fertilizer')"><div class="shop-option-icon">🌱</div><div class="shop-option-name">Adubo</div><div class="shop-option-cost">💰 50</div></div>
+                <div class="shop-option" onclick="buyShopItem('energy')"><div class="shop-option-icon">⚡</div><div class="shop-option-name">Tônico de energia</div><div class="shop-option-cost">💰 45</div></div>
+            </div>
+        </div>
+        <div class="build-menu" id="buildMenu"><div class="panel-title">🏗️ Construções</div><div class="build-options"><div class="build-option" onclick="selectBuilding('barn')"><div class="build-option-icon">🏚️</div><div class="build-option-name">Celeiro</div><div class="build-option-cost">💰 150</div></div><div class="build-option" onclick="selectBuilding('well')"><div class="build-option-icon">💧</div><div class="build-option-name">Poço</div><div class="build-option-cost">💰 100</div></div><div class="build-option" onclick="selectBuilding('coop')"><div class="build-option-icon">🐔</div><div class="build-option-name">Galinheiro</div><div class="build-option-cost">💰 200</div></div><div class="build-option" onclick="selectBuilding('fence')"><div class="build-option-icon">🪵</div><div class="build-option-name">Cerca</div><div class="build-option-cost">💰 20</div></div><div class="build-option" onclick="selectBuilding('tree')"><div class="build-option-icon">🌳</div><div class="build-option-name">Árvore</div><div class="build-option-cost">💰 30</div></div><div class="build-option" onclick="selectBuilding('expand')"><div class="build-option-icon">📐</div><div class="build-option-name">Expandir</div><div class="build-option-cost">💰 200 · 4×4</div></div><div class="build-option" onclick="selectBuilding('demolish')"><div class="build-option-icon">🧱</div><div class="build-option-name">Demolidor</div><div class="build-option-cost">Reembolso de 50%</div></div></div></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+const WORLD_GROUND_WIDTH = 240;
+const WORLD_GROUND_DEPTH = 180;
+const CROP_LABELS = { carrot: 'Cenoura', wheat: 'Trigo', tomato: 'Tomate', corn: 'Milho' };
+const CROP_COSTS = { carrot: 10, wheat: 12, tomato: 18, corn: 15 };
+const CROP_NAMES = { carrot: 'cenoura(s)', wheat: 'trigo(s)', tomato: 'tomate(s)', corn: 'milho(s)' };
+const GROW_TIMES = { carrot: 7, wheat: 10, tomato: 13, corn: 16 };
+const SEED_PACK_COSTS = { carrot: 25, wheat: 30, tomato: 35, corn: 40 };
+
+const MISSION_TEMPLATES = [
+        { id: 1, title: 'Plante 3 cenouras', progress: 0, goal: 3, reward: 50, type: 'plant' },
+        { id: 2, title: 'Colha 5 vegetais', progress: 0, goal: 5, reward: 100, type: 'harvest' },
+        { id: 3, title: 'Construa 1 prédio', progress: 0, goal: 1, reward: 75, type: 'build' },
+        { id: 4, title: 'Colete 4 produtos dos animais', progress: 0, goal: 4, reward: 80, type: 'collect' },
+        { id: 5, title: 'Colha 12 vegetais', progress: 0, goal: 12, reward: 200, type: 'harvest' }
+    ];
+
+function createMission(id) {
+    const template = MISSION_TEMPLATES[(id - 1) % MISSION_TEMPLATES.length];
+    const round = Math.floor((id - 1) / MISSION_TEMPLATES.length);
+    return {
+        ...template,
+        id,
+        title: round ? template.title.replace(/\d+/, (value) => String(Number(value) + round * 2)) : template.title,
+        progress: 0,
+        goal: template.goal + round * 2,
+        reward: template.reward + round * 25
+    };
+}
+
+function createInitialMissions() {
+    return MISSION_TEMPLATES.map((mission) => createMission(mission.id));
+}
+
+const gameState = {
+    coins: 100,
+    gems: 5,
+    energy: 100,
+    inventory: { carrot: 0, wheat: 0, tomato: 0, corn: 0, eggs: 0, milk: 0, truffle: 0 },
+    seeds: { carrot: 0, wheat: 0, tomato: 0, corn: 0 },
+    farmProducts: {
+        chicken: { stock: 0, lastAt: Date.now() },
+        cow: { stock: 0, lastAt: Date.now() },
+        pig: { stock: 0, lastAt: Date.now() }
+    },
+    missions: createInitialMissions(),
+    animals: [],
+    customers: [],
+    customerTimer: 4,
+    marketSales: 0,
+    farmGrid: [],
+    farms: { chicken: false, cow: false, pig: false },
+    farmOrder: [],
+    farmLocations: {},
+    farmLandTiles: {},
+    pendingFarmPlacement: null,
+    expansionCells: [],
+    farmCenters: {},
+    farmAreaGroups: {},
+    animalFarmTiles: [],
+    farmHolograms: [],
+    gridSize: 9,
+    currentMode: 'normal',
+    selectedCrop: 'carrot',
+    selectedBuilding: null,
+    playerWalkTime: 0,
+    lastTime: 0,
+};
+
+const canvas = document.getElementById('gameCanvas');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x76c4e5);
+scene.fog = new THREE.Fog(0x76c4e5, 55, 125);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(15, 18, 18);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.82;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const skyLight = new THREE.HemisphereLight(0xd8eff5, 0x596c43, 0.38);
+scene.add(skyLight);
+
+const ambientLight = new THREE.AmbientLight(0xf2ead5, 0.2);
+scene.add(ambientLight);
+
+const sun = new THREE.DirectionalLight(0xffedcf, 0.82);
+sun.position.set(15, 30, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
+sun.shadow.camera.left = -42;
+sun.shadow.camera.right = 42;
+sun.shadow.camera.top = 42;
+sun.shadow.camera.bottom = -42;
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 90;
+sun.shadow.bias = -0.00025;
+scene.add(sun);
+scene.add(sun.target);
+
+const groundTiles = [];
+const buildables = [];
+const cropMeshes = [];
+const harvestHolograms = new Map();
+const furrowMaterial = new THREE.MeshLambertMaterial({ color: 0x493522 });
+const farmEnvironment = new THREE.Group();
+scene.add(farmEnvironment);
+const tileMap = new Map();
+const plantedTiles = new Set();
+
+const animalMaterials = {
+    cowBody: new THREE.MeshLambertMaterial({ color: 0x9b7b5b }),
+    cowHead: new THREE.MeshLambertMaterial({ color: 0xe7d7c5 }),
+    horn: new THREE.MeshLambertMaterial({ color: 0x5b4a41 }),
+    pigBody: new THREE.MeshLambertMaterial({ color: 0xf2a99b }),
+    pigSnout: new THREE.MeshLambertMaterial({ color: 0xd97878 }),
+    chickenBody: new THREE.MeshLambertMaterial({ color: 0xf4d35e }),
+    chickenHead: new THREE.MeshLambertMaterial({ color: 0xfff6d7 }),
+    beak: new THREE.MeshLambertMaterial({ color: 0xf3b63f }),
+    animalLeg: new THREE.MeshLambertMaterial({ color: 0x2d3748 })
+};
+
+const animalGeometries = {
+    cowBody: new THREE.BoxGeometry(1.8, 0.9, 1.2),
+    cowHead: new THREE.BoxGeometry(0.7, 0.55, 0.7),
+    horn: new THREE.ConeGeometry(0.08, 0.25, 4),
+    pigBody: new THREE.SphereGeometry(0.48, 14, 14),
+    pigHead: new THREE.SphereGeometry(0.3, 14, 14),
+    pigSnout: new THREE.CylinderGeometry(0.16, 0.19, 0.12, 12),
+    pigEar: new THREE.ConeGeometry(0.11, 0.3, 5),
+    chickenBody: new THREE.SphereGeometry(0.42, 14, 14),
+    chickenHead: new THREE.SphereGeometry(0.2, 12, 12),
+    beak: new THREE.ConeGeometry(0.08, 0.2, 6),
+    animalLeg: new THREE.BoxGeometry(0.12, 0.55, 0.12)
+};
+
+let audioCtx = null;
+let soundMuted = false;
+
+function ensureAudio() {
+    if (!audioCtx) {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (error) {
+            audioCtx = null;
+        }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(type) {
+    if (soundMuted) return;
+    ensureAudio();
+    if (!audioCtx) return;
+    const frequencies = { plant: 520, harvest: 760, coin: 980, build: 440, click: 620, error: 170 };
+    const frequency = frequencies[type] || 440;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type === 'error' ? 'sawtooth' : 'sine';
+    osc.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.07, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.2);
+}
+
+function toggleSound() {
+    soundMuted = !soundMuted;
+    updateSoundToggle();
+    if (!soundMuted) playSound('click');
+}
+
+function updateSoundToggle() {
+    const button = document.getElementById('soundToggle');
+    if (button) button.textContent = soundMuted ? '🔇 Som: desligado' : '🔊 Som: ligado';
+}
+
+function addNotification(text, color = '#48bb78') {
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
+    const note = document.createElement('div');
+    note.className = 'notification';
+    note.textContent = text;
+    note.style.background = color;
+    document.body.appendChild(note);
+    if (color === '#ef4444') playSound('error');
+    setTimeout(() => note.remove(), 2000);
+}
+
+async function enterLandscapeMode() {
+    if (!document.fullscreenElement) {
+        if (!document.documentElement.requestFullscreen) {
+            addNotification('Gire o celular para jogar na horizontal.', '#f59e0b');
+            return;
+        }
+        try {
+            await document.documentElement.requestFullscreen();
+        } catch (error) {
+            addNotification('Não foi possível abrir em tela cheia. Gire o celular para a horizontal.', '#f59e0b');
+            return;
+        }
+    }
+
+    if (screen.orientation && typeof screen.orientation.lock === 'function') {
+        try {
+            await screen.orientation.lock('landscape');
+            addNotification('Tela horizontal ativada!', '#10b981');
+        } catch (error) {
+            addNotification('Gire o celular para a horizontal para jogar melhor.', '#f59e0b');
+        }
+        return;
+    }
+
+    addNotification('Gire o celular para jogar na horizontal.', '#f59e0b');
+}
+
+let uiSignature = '';
+
+function updateUI() {
+    const coinsEl = document.getElementById('coins');
+    const gemsEl = document.getElementById('gems');
+    const energyEl = document.getElementById('energy');
+    const carrotEl = document.getElementById('inv-carrot');
+    const wheatEl = document.getElementById('inv-wheat');
+    const tomatoEl = document.getElementById('inv-tomato');
+    const cornEl = document.getElementById('inv-corn');
+    const eggsEl = document.getElementById('inv-eggs');
+    const milkEl = document.getElementById('inv-milk');
+    const truffleEl = document.getElementById('inv-truffle');
+    const carrotSeedsEl = document.getElementById('seed-carrot');
+    const wheatSeedsEl = document.getElementById('seed-wheat');
+    const tomatoSeedsEl = document.getElementById('seed-tomato');
+    const cornSeedsEl = document.getElementById('seed-corn');
+
+    if (coinsEl) coinsEl.textContent = gameState.coins.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+    if (gemsEl) gemsEl.textContent = gameState.gems;
+    if (energyEl) energyEl.textContent = Math.floor(gameState.energy);
+    if (carrotEl) carrotEl.textContent = gameState.inventory.carrot;
+    if (wheatEl) wheatEl.textContent = gameState.inventory.wheat;
+    if (tomatoEl) tomatoEl.textContent = gameState.inventory.tomato;
+    if (cornEl) cornEl.textContent = gameState.inventory.corn;
+    if (eggsEl) eggsEl.textContent = gameState.inventory.eggs;
+    if (milkEl) milkEl.textContent = gameState.inventory.milk;
+    if (truffleEl) truffleEl.textContent = gameState.inventory.truffle;
+    if (carrotSeedsEl) carrotSeedsEl.textContent = gameState.seeds.carrot;
+    if (wheatSeedsEl) wheatSeedsEl.textContent = gameState.seeds.wheat;
+    if (tomatoSeedsEl) tomatoSeedsEl.textContent = gameState.seeds.tomato;
+    if (cornSeedsEl) cornSeedsEl.textContent = gameState.seeds.corn;
+    updateCropSelector();
+
+    const counts = { chicken: 0, cow: 0, pig: 0 };
+    for (const animal of gameState.animals) {
+        counts[animal.type] = (counts[animal.type] || 0) + 1;
+    }
+    const missionsSignature = gameState.missions.map((mission) => `${mission.id}:${mission.progress}/${mission.goal}`).join(',');
+    const signature = `${counts.chicken}|${counts.cow}|${counts.pig}|${missionsSignature}`;
+    if (signature === uiSignature) return;
+    uiSignature = signature;
+
+    const animalsList = document.getElementById('animalsList');
+    if (animalsList) {
+        animalsList.innerHTML = `
+            <div class="animal-item"><span>🐔 Galinhas</span> <strong>${counts.chicken || 0}</strong></div>
+            <div class="animal-item"><span>🐄 Vacas</span> <strong>${counts.cow || 0}</strong></div>
+            <div class="animal-item"><span>🐖 Porcos</span> <strong>${counts.pig || 0}</strong></div>
+        `;
+    }
+
+    const missionsList = document.getElementById('missionsList');
+    if (missionsList) {
+        missionsList.innerHTML = gameState.missions.map((mission) => {
+            const progress = Math.min(mission.progress, mission.goal);
+            return `
+                <div class="mission-item">
+                    <div class="mission-title">${mission.title}</div>
+                    <div class="mission-progress">${progress}/${mission.goal}</div>
+                    <div class="mission-reward">${mission.reward > 0 ? `Recompensa: 💰 ${mission.reward}` : 'Colheita sem recompensa em moedas'}</div>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+let cropUiRefs = null;
+
+function getCropUiRefs() {
+    if (!cropUiRefs) {
+        cropUiRefs = {
+            mobileIcon: document.getElementById('mobileSelectedCropIcon'),
+            mobileName: document.getElementById('mobileSelectedCropName'),
+            mobileDetails: document.getElementById('mobileSelectedCropDetails'),
+            cropOptions: [...document.querySelectorAll('[data-crop]')],
+            mobileCropOptions: [...document.querySelectorAll('[data-mobile-crop]')],
+            seedCounts: [...document.querySelectorAll('.crop-option-stock')],
+            mobileSeedCounts: [...document.querySelectorAll('[data-mobile-seed-count]')],
+            plantButtons: [...document.querySelectorAll('[data-plant-crop]')]
+        };
+    }
+    return cropUiRefs;
+}
+
+function addDeveloperMoney(event) {
+    event.preventDefault();
+    const amountInput = document.getElementById('developerMoneyAmount');
+    const energyInput = document.getElementById('developerEnergyAmount');
+    const status = document.getElementById('developerStatus');
+
+    const enteredAmount = (amountInput?.value || '').trim();
+    const enteredEnergy = (energyInput?.value || '').trim();
+    const moneyPattern = /^(?:\d+(?:[.,]\d{0,2})?|[.,]\d{1,2})$/;
+    const energyPattern = /^(?:\d+(?:[.,]\d{0,2})?|[.,]\d{1,2})$/;
+
+    let addedMoney = 0;
+    let addedEnergy = 0;
+
+    if (enteredAmount) {
+        if (!moneyPattern.test(enteredAmount)) {
+            status.textContent = 'Dinheiro do modo dev deve ser um valor positivo com até 2 casas decimais.';
+            status.style.color = '#8f352b';
+            return;
+        }
+        addedMoney = Number(enteredAmount.replace(',', '.'));
+        if (!Number.isFinite(addedMoney) || addedMoney <= 0) {
+            status.textContent = 'Informe um valor de dinheiro positivo.';
+            status.style.color = '#8f352b';
+            return;
+        }
+    }
+
+    if (enteredEnergy) {
+        if (!energyPattern.test(enteredEnergy)) {
+            status.textContent = 'Energia do modo dev deve ser um valor positivo com até 2 casas decimais.';
+            status.style.color = '#8f352b';
+            return;
+        }
+        addedEnergy = Number(enteredEnergy.replace(',', '.'));
+        if (!Number.isFinite(addedEnergy) || addedEnergy <= 0) {
+            status.textContent = 'Informe um valor de energia positivo.';
+            status.style.color = '#8f352b';
+            return;
+        }
+    }
+
+    if (!enteredAmount && !enteredEnergy) {
+        status.textContent = 'Digite um valor para dinheiro e/ou energia.';
+        status.style.color = '#8f352b';
+        return;
+    }
+
+    const amountInCents = Math.round(addedMoney * 100);
+    const currentBalanceInCents = Math.round(gameState.coins * 100);
+    gameState.coins = (currentBalanceInCents + amountInCents) / 100;
+    gameState.energy = Math.min(100, gameState.energy + addedEnergy);
+
+    updateUI();
+    amountInput.value = '';
+    energyInput.value = '';
+
+    const moneyText = addedMoney > 0 ? `${addedMoney.toLocaleString('pt-BR')} moedas` : '';
+    const energyText = addedEnergy > 0 ? `${addedEnergy.toLocaleString('pt-BR')} energia` : '';
+    const parts = [moneyText, energyText].filter(Boolean);
+    status.textContent = `${parts.join(' e ')} adicionados ao modo desenvolvedor.`;
+    status.style.color = '#236b35';
+}
+
+function closeDeveloperPanel() {
+    const panel = document.getElementById('developerPanel');
+    const button = document.getElementById('developerToggle');
+    if (panel) {
+        panel.classList.remove('active');
+        panel.setAttribute('aria-hidden', 'true');
+    }
+    if (button) button.setAttribute('aria-expanded', 'false');
+}
+
+function toggleDeveloperPanel() {
+    const panel = document.getElementById('developerPanel');
+    const button = document.getElementById('developerToggle');
+    if (!panel || !button) return;
+    const shouldOpen = !panel.classList.contains('active');
+    panel.classList.toggle('active', shouldOpen);
+    panel.setAttribute('aria-hidden', String(!shouldOpen));
+    button.setAttribute('aria-expanded', String(shouldOpen));
+    if (shouldOpen) {
+        playSound('click');
+        closeSettings();
+        closeSidePanels();
+        document.getElementById('shopMenu')?.classList.remove('active');
+        document.getElementById('buildMenu')?.classList.remove('active');
+        toggleCropMenu(false);
+    }
+}
+
+function closeSettings() {
+    const settings = document.getElementById('settingsPanel');
+    if (settings) {
+        settings.classList.remove('active');
+    }
+}
+
+function toggleSettings() {
+    const panel = document.getElementById('settingsPanel');
+    if (panel) {
+        const wasActive = panel.classList.contains('active');
+        if (wasActive) {
+            closeSettings();
+            return;
+        }
+        playSound('click');
+        closeDeveloperPanel();
+        panel.classList.add('active');
+        if (panel.classList.contains('active')) {
+            closeSidePanels();
+            document.getElementById('shopMenu')?.classList.remove('active');
+            document.getElementById('buildMenu')?.classList.remove('active');
+            toggleCropMenu(false);
+        }
+    }
+}
+
+function closeSidePanels() {
+    document.querySelectorAll('.side-panel').forEach((item) => {
+        item.classList.remove('active');
+        item.setAttribute('aria-hidden', 'true');
+    });
+    document.querySelectorAll('.side-tab-btn').forEach((tab) => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
+    });
+}
+
+function toggleSideTab(panelId, button) {
+    closeSettings();
+    closeDeveloperPanel();
+    document.getElementById('shopMenu')?.classList.remove('active');
+    document.getElementById('buildMenu')?.classList.remove('active');
+    toggleCropMenu(false);
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+    const wasOpen = panel.classList.contains('active');
+    closeSidePanels();
+    if (!wasOpen) {
+        playSound('click');
+        panel.classList.add('active');
+        panel.setAttribute('aria-hidden', 'false');
+        if (button) {
+            button.classList.add('active');
+            button.setAttribute('aria-selected', 'true');
+        }
+    }
+}
+
+function saveGameSilent() {
+    try {
+        const saveData = {
+            coins: gameState.coins,
+            gems: gameState.gems,
+            energy: gameState.energy,
+            inventory: gameState.inventory,
+            seeds: gameState.seeds,
+            selectedCrop: gameState.selectedCrop,
+            farms: gameState.farms,
+            farmOrder: gameState.farmOrder,
+            farmLocations: gameState.farmLocations,
+            expansionCells: gameState.expansionCells,
+            farmProducts: gameState.farmProducts,
+            missions: gameState.missions.map((mission) => ({ ...mission })),
+            animals: gameState.animals.map((animal) => ({ type: animal.type, x: animal.x, z: animal.z })),
+            buildings: groundTiles.filter((tile) => tile.userData.building).map((tile) => ({
+                x: tile.userData.x,
+                z: tile.userData.z,
+                type: tile.userData.building,
+                cost: tile.userData.buildCost || 0
+            })),
+            crops: [...plantedTiles].map((tile) => ({
+                x: tile.userData.x,
+                z: tile.userData.z,
+                type: tile.userData.crop.type,
+                plantedAt: tile.userData.crop.plantedAt,
+                growth: tile.userData.crop.growth,
+                ready: tile.userData.crop.ready
+            })),
+            soundMuted
+        };
+        localStorage.setItem('fazendaSave', JSON.stringify(saveData));
+    } catch (error) {
+        console.warn('Falha ao salvar', error);
+    }
+}
+
+function saveGame() {
+    saveGameSilent();
+    addNotification('Jogo salvo com sucesso!', '#10b981');
+    playSound('coin');
+    toggleSettings();
+}
+
+function loadGame() {
+    const raw = localStorage.getItem('fazendaSave');
+    if (!raw) return false;
+    try {
+        const saveData = JSON.parse(raw);
+        gameState.coins = saveData.coins ?? gameState.coins;
+        gameState.gems = saveData.gems ?? gameState.gems;
+        gameState.energy = saveData.energy ?? gameState.energy;
+        gameState.inventory = { ...gameState.inventory, ...(saveData.inventory || {}) };
+        gameState.seeds = { ...gameState.seeds, ...(saveData.seeds || {}) };
+        gameState.expansionCells = saveData.expansionCells || [];
+        for (const cell of gameState.expansionCells) {
+            if (!tileMap.has(`${cell.x},${cell.z}`)) {
+                createGroundTile(cell.x, cell.z, true);
+            }
+        }
+        gameState.farmProducts = {
+            chicken: { ...gameState.farmProducts.chicken, ...(saveData.farmProducts?.chicken || {}) },
+            cow: { ...gameState.farmProducts.cow, ...(saveData.farmProducts?.cow || {}) },
+            pig: { ...gameState.farmProducts.pig, ...(saveData.farmProducts?.pig || {}) }
+        };
+        gameState.selectedCrop = saveData.selectedCrop || gameState.selectedCrop;
+        gameState.farms = { chicken: false, cow: false, pig: false, ...(saveData.farms || {}) };
+        gameState.farmLocations = { ...(saveData.farmLocations || {}) };
+        if (!saveData.farms) {
+            for (const animal of saveData.animals || []) {
+                if (gameState.farms[animal.type] !== undefined) gameState.farms[animal.type] = true;
+            }
+        }
+        const enabledFarms = ['chicken', 'cow', 'pig'].filter((type) => gameState.farms[type]);
+        gameState.farmOrder = [...new Set((saveData.farmOrder || enabledFarms).filter((type) => enabledFarms.includes(type)))];
+        for (const type of enabledFarms) {
+            if (!gameState.farmOrder.includes(type)) gameState.farmOrder.push(type);
+        }
+        if (saveData.missions) {
+            gameState.missions = saveData.missions.map((saved) => ({
+                ...createMission(saved.id),
+                ...saved
+            }));
+        }
+        if (typeof saveData.soundMuted === 'boolean') {
+            soundMuted = saveData.soundMuted;
+            updateSoundToggle();
+        }
+        buildAnimalFarms();
+
+        for (const animal of gameState.animals) {
+            scene.remove(animal.mesh);
+        }
+        gameState.animals = [];
+
+        if (saveData.animals) {
+            for (const data of saveData.animals) {
+                const center = gameState.farmCenters[data.type];
+                if (!center) continue;
+                const legacySave = !saveData.farms;
+                spawnAnimal(data.type, legacySave ? center.x : data.x, legacySave ? center.z : data.z, false);
+            }
+        }
+
+        for (const data of saveData.buildings || []) {
+            const tile = tileMap.get(`${data.x},${data.z}`);
+            if (!tile || tile.userData.occupied) continue;
+            tile.userData.building = data.type;
+            tile.userData.buildCost = data.cost || 0;
+            tile.userData.occupied = true;
+            const group = createBuildingMesh(data.type);
+            group.position.set(tile.position.x, 0.1, tile.position.z);
+            group.userData = { tile, type: data.type, cost: data.cost || 0 };
+            scene.add(group);
+            buildables.push(group);
+        }
+
+        for (const data of saveData.crops || []) {
+            const tile = tileMap.get(`${data.x},${data.z}`);
+            if (!tile || tile.userData.occupied) continue;
+            tile.userData.occupied = true;
+            tile.userData.crop = { type: data.type, plantedAt: data.plantedAt, growth: data.growth || 0, ready: !!data.ready };
+            const cropMesh = createCropMesh(data.type);
+            cropMesh.position.set(tile.position.x, 0.2 + (data.growth || 0) * 0.4, tile.position.z);
+            cropMesh.scale.y = 0.5 + (data.growth || 0) * 1.4;
+            scene.add(cropMesh);
+            cropMeshes.push(cropMesh);
+            tile.userData.cropMesh = cropMesh;
+            plantedTiles.add(tile);
+        }
+
+        uiSignature = '';
+        invalidateEnvironmentBlockers();
+        updateUI();
+        return true;
+    } catch (error) {
+        console.warn('Falha ao carregar save', error);
+        return false;
+    }
+}
+
+function resetGame() {
+    localStorage.removeItem('fazendaSave');
+    gameState.coins = 100;
+    gameState.gems = 5;
+    gameState.energy = 100;
+    gameState.inventory = { carrot: 0, wheat: 0, tomato: 0, corn: 0, eggs: 0, milk: 0, truffle: 0 };
+    gameState.seeds = { carrot: 0, wheat: 0, tomato: 0, corn: 0 };
+    gameState.farmProducts = {
+        chicken: { stock: 0, lastAt: Date.now() },
+        cow: { stock: 0, lastAt: Date.now() },
+        pig: { stock: 0, lastAt: Date.now() }
+    };
+    gameState.missions = createInitialMissions();
+    gameState.marketSales = 0;
+    gameState.customerTimer = 4;
+    for (const customer of gameState.customers) scene.remove(customer.mesh);
+    gameState.customers = [];
+    for (const animal of gameState.animals) scene.remove(animal.mesh);
+    gameState.animals = [];
+    for (const landTiles of Object.values(gameState.farmLandTiles)) {
+        for (const tile of landTiles) {
+            scene.add(tile);
+            if (!groundTiles.includes(tile)) groundTiles.push(tile);
+            tileMap.set(tile.userData.key, tile);
+        }
+    }
+    gameState.farmLandTiles = {};
+    for (const tile of groundTiles.filter((landTile) => landTile.userData.isExpansion)) {
+        if (tile.userData.cropMesh) scene.remove(tile.userData.cropMesh);
+        const buildableIndex = buildables.findIndex((object) => object.userData.tile === tile);
+        if (buildableIndex !== -1) {
+            const [object] = buildables.splice(buildableIndex, 1);
+            scene.remove(object);
+        }
+        scene.remove(tile);
+        groundTiles.splice(groundTiles.indexOf(tile), 1);
+        tileMap.delete(tile.userData.key);
+    }
+    for (const tile of groundTiles) {
+        if (tile.userData.cropMesh) {
+            scene.remove(tile.userData.cropMesh);
+            tile.userData.cropMesh = null;
+        }
+        tile.userData.crop = null;
+        tile.userData.building = null;
+        tile.userData.buildCost = 0;
+        tile.userData.occupied = false;
+    }
+    for (const buildable of buildables) scene.remove(buildable);
+    buildables.length = 0;
+    plantedTiles.clear();
+    for (const group of Object.values(gameState.farmAreaGroups)) scene.remove(group);
+    gameState.farms = { chicken: false, cow: false, pig: false };
+    gameState.farmOrder = [];
+    gameState.farmLocations = {};
+    gameState.pendingFarmPlacement = null;
+    gameState.expansionCells = [];
+    finishPlacementMode();
+    gameState.selectedBuilding = null;
+    document.getElementById('demolishCancel')?.classList.remove('active');
+    gameState.farmCenters = {};
+    gameState.farmAreaGroups = {};
+    gameState.animalFarmTiles = [];
+    uiSignature = '';
+    buildFarmEnvironment();
+    buildAnimalFarms();
+    positionPlayerAtFarmEntrance();
+    updateUI();
+    addNotification('Save reiniciado.', '#f59e0b');
+    toggleSettings();
+}
+
+function spawnAnimal(type, x, z, purchased = false) {
+    const animal = new THREE.Group();
+    const addPart = (geometry, material, position, rotation = null) => {
+        const part = new THREE.Mesh(geometry, material);
+        part.position.set(position.x, position.y, position.z);
+        if (rotation) part.rotation.set(rotation.x, rotation.y, rotation.z);
+        part.castShadow = true;
+        part.receiveShadow = true;
+        animal.add(part);
+        return part;
+    };
+
+    if (type === 'cow') {
+        addPart(animalGeometries.cowBody, animalMaterials.cowBody, { x: 0, y: 0.78, z: 0 });
+        addPart(animalGeometries.cowHead, animalMaterials.cowHead, { x: 0.92, y: 1.17, z: 0 });
+        for (const side of [-1, 1]) {
+            addPart(animalGeometries.horn, animalMaterials.horn, { x: 0.78, y: 1.58, z: side * 0.22 });
+            for (const frontBack of [-1, 1]) {
+                addPart(animalGeometries.animalLeg, animalMaterials.animalLeg, { x: frontBack * 0.58, y: 0.28, z: side * 0.38 });
+            }
+        }
+    } else if (type === 'pig') {
+        addPart(animalGeometries.pigBody, animalMaterials.pigBody, { x: 0, y: 0.53, z: 0 });
+        addPart(animalGeometries.pigHead, animalMaterials.pigBody, { x: 0, y: 0.79, z: 0.34 });
+        addPart(animalGeometries.pigSnout, animalMaterials.pigSnout, { x: 0, y: 0.72, z: 0.62 }, { x: Math.PI / 2, y: 0, z: 0 });
+        for (const side of [-1, 1]) {
+            addPart(animalGeometries.pigEar, animalMaterials.pigBody, { x: side * 0.19, y: 1.03, z: 0.32 });
+            addPart(animalGeometries.animalLeg, animalMaterials.animalLeg, { x: side * 0.27, y: 0.22, z: 0.23 });
+            addPart(animalGeometries.animalLeg, animalMaterials.animalLeg, { x: side * 0.27, y: 0.22, z: -0.23 });
+        }
+    } else if (type === 'chicken') {
+        addPart(animalGeometries.chickenBody, animalMaterials.chickenBody, { x: 0, y: 0.47, z: 0 });
+        addPart(animalGeometries.chickenHead, animalMaterials.chickenHead, { x: 0, y: 0.83, z: 0.19 });
+        addPart(animalGeometries.beak, animalMaterials.beak, { x: 0, y: 0.78, z: 0.4 }, { x: Math.PI / 2, y: 0, z: 0 });
+        for (const side of [-1, 1]) {
+            addPart(animalGeometries.animalLeg, animalMaterials.animalLeg, { x: side * 0.16, y: 0.2, z: 0 });
+        }
+    } else {
+        throw new Error(`Tipo de animal inválido: ${type}`);
+    }
+
+    animal.position.set(x, 0, z);
+    animal.userData = { animalType: type, purchased };
+    scene.add(animal);
+    const record = { type, x, z, mesh: animal };
+    gameState.animals.push(record);
+    return record;
+}
+
+function collectEggs() {
+    if (!gameState.farms.chicken) {
+        addNotification('Desbloqueie a fazenda de galinhas para coletar ovos.', '#f59e0b');
+        return;
+    }
+    const ready = gameState.farmProducts.chicken.stock;
+    if (ready === 0) {
+        addNotification('Ainda não há ovos prontos. Aguarde a produção.', '#f59e0b');
+        return;
+    }
+    if (gameState.animals.filter((animal) => animal.type === 'chicken').length === 0) {
+        addNotification('Ainda não há galinhas para colher ovos.', '#ef4444');
+        return;
+    }
+    const total = ready;
+    gameState.farmProducts.chicken.stock = 0;
+    gameState.farmProducts.chicken.lastAt = Date.now();
+    gameState.inventory.eggs += total;
+    addNotification(`${total} ovo(s) coletado(s).`, '#10b981');
+    completeMission('collect', total);
+    playSound('harvest');
+    updateUI();
+}
+
+function collectMilk() {
+    if (!gameState.farms.cow) {
+        addNotification('Desbloqueie a fazenda de vacas para coletar leite.', '#f59e0b');
+        return;
+    }
+    const ready = gameState.farmProducts.cow.stock;
+    if (ready === 0) {
+        addNotification('Ainda não há leite pronto. Aguarde a produção.', '#f59e0b');
+        return;
+    }
+    if (gameState.animals.filter((animal) => animal.type === 'cow').length === 0) {
+        addNotification('Compre uma vaca para produzir leite.', '#f59e0b');
+        return;
+    }
+    const total = ready;
+    gameState.farmProducts.cow.stock = 0;
+    gameState.farmProducts.cow.lastAt = Date.now();
+    gameState.inventory.milk += total;
+    addNotification(`${total} unidade(s) de leite coletada(s).`, '#10b981');
+    completeMission('collect', total);
+    playSound('harvest');
+    updateUI();
+}
+
+function collectTruffles() {
+    if (!gameState.farms.pig) {
+        addNotification('Desbloqueie a fazenda de porcos para coletar trufas.', '#f59e0b');
+        return;
+    }
+    const ready = gameState.farmProducts.pig.stock;
+    if (ready === 0) {
+        addNotification('Ainda não há trufas prontas. Aguarde a produção.', '#f59e0b');
+        return;
+    }
+    if (gameState.animals.filter((animal) => animal.type === 'pig').length === 0) {
+        addNotification('Ainda não há porcos para procurar trufas.', '#ef4444');
+        return;
+    }
+    const total = ready;
+    gameState.farmProducts.pig.stock = 0;
+    gameState.farmProducts.pig.lastAt = Date.now();
+    gameState.inventory.truffle += total;
+    addNotification(`${total} trufa(s) coletada(s).`, '#10b981');
+    completeMission('collect', total);
+    playSound('harvest');
+    updateUI();
+}
+
+function buyShopItem(type) {
+    const prices = { carrotSeeds: 25, wheatSeeds: 30, tomatoSeeds: 35, cornSeeds: 40, chickenFarm: 100, cowFarm: 160, pigFarm: 130, chicken: 80, cow: 140, pig: 90, fertilizer: 50, energy: 45 };
+    const cost = prices[type];
+    if (cost === undefined) return;
+    const farmPurchases = { chickenFarm: 'chicken', cowFarm: 'cow', pigFarm: 'pig' };
+    if (farmPurchases[type] && gameState.farms[farmPurchases[type]]) {
+        addNotification('Essa fazenda já está liberada.', '#f59e0b');
+        return;
+    }
+    if (['chicken', 'cow', 'pig'].includes(type) && !gameState.farms[type]) {
+        const farmName = { chicken: 'galinhas', cow: 'vacas', pig: 'porcos' }[type];
+        addNotification(`Desbloqueie a fazenda de ${farmName} primeiro.`, '#f59e0b');
+        return;
+    }
+    if (type === 'fertilizer' && plantedTiles.size === 0) {
+        addNotification('Plante algo antes de comprar adubo.', '#f59e0b');
+        return;
+    }
+    if (type === 'energy' && gameState.energy >= 100) {
+        addNotification('Sua energia já está cheia.', '#f59e0b');
+        return;
+    }
+    if (gameState.coins < cost) {
+        addNotification('Dinheiro insuficiente!', '#ef4444');
+        return;
+    }
+
+    if (farmPurchases[type]) {
+        gameState.pendingFarmPlacement = { type: farmPurchases[type], cost };
+        beginPlacementMode('farm-placement');
+        gameState.selectedBuilding = null;
+        clearPlacementPreview();
+        updatePlacementControls();
+        addNotification('Mova o cursor para ver a área 5×5; clique para confirmar em verde.');
+        toggleShopMenu();
+        return;
+    }
+
+    gameState.coins -= cost;
+
+    if (['carrotSeeds', 'wheatSeeds', 'tomatoSeeds', 'cornSeeds'].includes(type)) {
+        const crop = type.replace('Seeds', '');
+        gameState.seeds[crop] += 5;
+        addNotification(`+5 sementes de ${CROP_LABELS[crop].toLowerCase()}.`, '#10b981');
+        playSound('coin');
+    } else if (['chicken', 'cow', 'pig'].includes(type)) {
+        const center = gameState.farmCenters[type];
+        const offset = gameState.animals.filter((animal) => animal.type === type).length;
+        spawnAnimal(type, center.x + ((offset % 3) - 1) * 1.2, center.z + (Math.floor(offset / 3) % 3 - 1) * 1.2, true);
+        const names = { chicken: 'galinha', cow: 'vaca', pig: 'porco' };
+        addNotification(`Nova ${names[type]} adicionada à fazenda.`, '#10b981');
+        playSound('coin');
+    } else if (type === 'fertilizer') {
+        let fertilized = 0;
+        for (const tile of plantedTiles) {
+            if (tile.userData.crop) {
+                tile.userData.crop.plantedAt -= 5000;
+                fertilized += 1;
+            }
+        }
+        addNotification(fertilized ? `Adubo aplicado em ${fertilized} plantação(ões)!` : 'Adubo comprado; use nas próximas plantações.', '#10b981');
+        playSound('coin');
+    } else if (type === 'energy') {
+        gameState.energy = Math.min(100, gameState.energy + 40);
+        addNotification('Tônico usado! Energia +40.', '#10b981');
+        playSound('coin');
+    }
+
+    updateUI();
+    toggleShopMenu();
+}
+
+function getOccupiedLandCells(includeEmptyGround = true) {
+    const occupied = new Set();
+    for (const tile of tileMap.values()) {
+        if (includeEmptyGround || tile.userData.occupied || tile.userData.building || tile.userData.crop) {
+            occupied.add(`${tile.userData.x},${tile.userData.z}`);
+        }
+    }
+    for (const tile of gameState.animalFarmTiles) {
+        occupied.add(`${Math.round(tile.userData.x / 1.6)},${Math.round(tile.userData.z / 1.6)}`);
+    }
+    return occupied;
+}
+
+let placementBlockerBoxes = [];
+let playerBlockerBoxes = [];
+let environmentBlockersDirty = true;
+
+function invalidateEnvironmentBlockers() {
+    environmentBlockersDirty = true;
+}
+
+function rebuildEnvironmentBlockers() {
+    const placementBoxes = [];
+    const playerBoxes = [];
+    farmEnvironment.updateMatrixWorld(true);
+    farmEnvironment.traverse((object) => {
+        if (!object.isMesh || object.userData.isPlacementSurface) return;
+        const bounds = new THREE.Box3().setFromObject(object);
+        if (bounds.isEmpty()) return;
+        if (bounds.max.y > -0.12) placementBoxes.push(bounds);
+        if (bounds.max.y > 0.45) {
+            playerBoxes.push({ minX: bounds.min.x, maxX: bounds.max.x, minZ: bounds.min.z, maxZ: bounds.max.z });
+        }
+    });
+    for (const buildable of buildables) {
+        const bounds = new THREE.Box3().setFromObject(buildable);
+        if (bounds.isEmpty()) continue;
+        placementBoxes.push(bounds);
+        playerBoxes.push({ minX: bounds.min.x, maxX: bounds.max.x, minZ: bounds.min.z, maxZ: bounds.max.z });
+    }
+    for (const type of Object.keys(gameState.farmAreaGroups)) {
+        const center = gameState.farmCenters[type];
+        if (!center) continue;
+        playerBoxes.push({ minX: center.minX - 1, maxX: center.maxX + 1, minZ: center.minZ - 1, maxZ: center.maxZ + 1 });
+    }
+    placementBlockerBoxes = placementBoxes;
+    playerBlockerBoxes = playerBoxes;
+    environmentBlockersDirty = false;
+}
+
+function getEnvironmentBlockerBoxes() {
+    if (environmentBlockersDirty) rebuildEnvironmentBlockers();
+    const boxes = placementBlockerBoxes.slice();
+    if (playerGroup) boxes.push(new THREE.Box3().setFromObject(playerGroup));
+    return boxes;
+}
+
+function getPlayerBlockerBoxes() {
+    if (environmentBlockersDirty) rebuildEnvironmentBlockers();
+    return playerBlockerBoxes;
+}
+
+function getPlacementSelection(point, mode) {
+    const side = mode === 'expand' ? 4 : 5;
+    const centerX = Math.round(point.x / 1.6);
+    const centerZ = Math.round(point.z / 1.6);
+    const firstX = centerX - Math.floor(side / 2);
+    const firstZ = centerZ - Math.floor(side / 2);
+    const desktopPlacement = !window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+    const occupied = getOccupiedLandCells(mode !== 'farm-placement' || !desktopPlacement);
+    const blockers = getEnvironmentBlockerBoxes();
+    const cells = [];
+
+    for (let offsetX = 0; offsetX < side; offsetX++) {
+        for (let offsetZ = 0; offsetZ < side; offsetZ++) {
+            const x = firstX + offsetX;
+            const z = firstZ + offsetZ;
+            const cellBounds = new THREE.Box3(
+                new THREE.Vector3(x * 1.6 - 0.75, -0.1, z * 1.6 - 0.75),
+                new THREE.Vector3(x * 1.6 + 0.75, 3.5, z * 1.6 + 0.75)
+            );
+            const insideWorld = Math.abs(x * 1.6) + 0.75 <= WORLD_GROUND_WIDTH / 2 && Math.abs(z * 1.6) + 0.75 <= WORLD_GROUND_DEPTH / 2;
+            const blocked = !insideWorld || occupied.has(`${x},${z}`) || blockers.some((bounds) => bounds.intersectsBox(cellBounds));
+            cells.push({ x, z, blocked });
+        }
+    }
+
+    const touchesLand = mode !== 'expand' && desktopPlacement ? true : cells.some((cell) =>
+        occupied.has(`${cell.x - 1},${cell.z}`) || occupied.has(`${cell.x + 1},${cell.z}`) ||
+        occupied.has(`${cell.x},${cell.z - 1}`) || occupied.has(`${cell.x},${cell.z + 1}`)
+    );
+    if (mode === 'expand' && !touchesLand) cells.forEach((cell) => { cell.blocked = true; });
+
+    return {
+        mode,
+        cells,
+        centerX,
+        centerZ,
+        key: `${mode}:${firstX},${firstZ}`,
+        valid: (mode !== 'expand' || touchesLand) && cells.every((cell) => !cell.blocked)
+    };
+}
+
+function commitPlacementSelection(selection) {
+    if (!selection || !selection.valid) {
+        addNotification('A área vermelha está ocupada ou fora do espaço plano disponível.', '#ef4444');
+        updatePlacementControls();
+        return;
+    }
+
+    if (selection.mode === 'expand') {
+        if (gameState.coins < 200) {
+            addNotification('Dinheiro insuficiente para expandir!', '#ef4444');
+            return;
+        }
+        gameState.coins -= 200;
+        for (const cell of selection.cells) {
+            createGroundTile(cell.x, cell.z, true);
+            gameState.expansionCells.push({ x: cell.x, z: cell.z });
+        }
+        finishPlacementMode();
+        updateUI();
+        clearPlacementPreview();
+        updatePlacementControls();
+        playSound('build');
+        return;
+    }
+
+    const pending = gameState.pendingFarmPlacement;
+    if (!pending) return;
+    if (gameState.coins < pending.cost) {
+        gameState.pendingFarmPlacement = null;
+        finishPlacementMode();
+        clearPlacementPreview();
+        updatePlacementControls();
+        addNotification('Dinheiro insuficiente para comprar essa fazenda!', '#ef4444');
+        return;
+    }
+
+    gameState.coins -= pending.cost;
+    gameState.farms[pending.type] = true;
+    gameState.farmOrder.push(pending.type);
+    gameState.farmLocations[pending.type] = { x: selection.centerX * 1.6, z: selection.centerZ * 1.6 };
+    gameState.farmProducts[pending.type] = { stock: 0, lastAt: Date.now() };
+    gameState.pendingFarmPlacement = null;
+    finishPlacementMode();
+    buildAnimalFarms();
+    const center = gameState.farmCenters[pending.type];
+    spawnAnimal(pending.type, center.x, center.z, false);
+    const farmName = { chicken: 'galinhas', cow: 'vacas', pig: 'porcos' }[pending.type];
+    updateUI();
+    clearPlacementPreview();
+    updatePlacementControls();
+    playSound('coin');
+    addNotification(`Fazenda de ${farmName} liberada com 1 animal!`, '#10b981');
+}
+
+function createFarmHologram(type, centerX, centerZ, area) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 240;
+    const context = canvas.getContext('2d');
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.encoding = THREE.sRGBEncoding;
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.94, depthTest: false });
+    const hologram = new THREE.Sprite(material);
+    hologram.position.set(centerX - 3.2, 4.35, centerZ);
+    hologram.scale.set(3.8, 1.7, 1);
+    hologram.renderOrder = 10;
+    hologram.userData = { farmType: type, baseY: 3.8, phase: Math.random() * Math.PI * 2, hologram: true, canvas, context, texture, lastLabel: '' };
+    area.add(hologram);
+    gameState.farmHolograms.push(hologram);
+    drawFarmHologram(hologram, Date.now());
+}
+
+function getFarmProductionInterval(stock) {
+    if (stock >= 100) return 120000;
+    if (stock >= 50) return 60000;
+    return 30000;
+}
+
+function roundRectPath(context, x, y, width, height, radius) {
+    if (typeof context.roundRect === 'function') {
+        context.beginPath();
+        context.roundRect(x, y, width, height, radius);
+        return;
+    }
+    context.beginPath();
+    context.moveTo(x + radius, y);
+    context.arcTo(x + width, y, x + width, y + height, radius);
+    context.arcTo(x + width, y + height, x, y + height, radius);
+    context.arcTo(x, y + height, x, y, radius);
+    context.arcTo(x, y, x + width, y, radius);
+    context.closePath();
+}
+
+function drawFarmHologram(hologram, now) {
+    const { farmType, context, canvas, texture } = hologram.userData;
+    const production = gameState.farmProducts[farmType];
+    const animalCount = gameState.animals.filter((animal) => animal.type === farmType).length;
+    const interval = getFarmProductionInterval(production.stock);
+    const nextIn = animalCount === 0
+        ? 0
+        : Math.max(0, interval - (now - production.lastAt) % interval);
+    const timeLabel = `${String(Math.floor(nextIn / 60000)).padStart(2, '0')}:${String(Math.floor((nextIn % 60000) / 1000)).padStart(2, '0')}`;
+    const stockLabel = animalCount ? `${production.stock} PRONTOS` : 'SEM ANIMAIS';
+    const statusLabel = animalCount ? `PRÓXIMO EM ${timeLabel}` : 'COMPRE UM ANIMAL';
+    const label = `${stockLabel}|${statusLabel}`;
+    if (label === hologram.userData.lastLabel) return;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = 'rgba(7, 29, 42, 0.88)';
+    context.strokeStyle = '#6fffe9';
+    context.lineWidth = 7;
+    roundRectPath(context, 7, 7, canvas.width - 14, canvas.height - 14, 34);
+    context.fill();
+    context.stroke();
+    context.font = '72px Segoe UI Emoji';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillStyle = '#ffffff';
+    const emoji = { chicken: '🥚', cow: '🥛', pig: '🍄' }[farmType] || '📦';
+    context.fillText(emoji, 83, 91);
+    context.textAlign = 'left';
+    context.font = 'bold 37px Segoe UI';
+    context.fillStyle = '#ffffff';
+    context.fillText(stockLabel, 150, 79);
+    context.font = 'bold 28px Segoe UI';
+    context.fillStyle = production.stock ? '#6fffe9' : '#b8d4d9';
+    context.fillText(statusLabel, 152, 143);
+    context.font = '20px Segoe UI';
+    context.fillStyle = '#d8f7f3';
+    context.fillText('CLIQUE PARA RECOLHER', 150, 195);
+    texture.needsUpdate = true;
+    hologram.userData.lastLabel = label;
+}
+
+function collectFromHologram(type) {
+    if (type === 'chicken') collectEggs();
+    if (type === 'cow') collectMilk();
+    if (type === 'pig') collectTruffles();
+}
+
+function updateFarmHolograms(now) {
+    const wallClock = Date.now();
+    for (const type of ['chicken', 'cow', 'pig']) {
+        const production = gameState.farmProducts[type];
+        const animalCount = gameState.animals.filter((animal) => animal.type === type).length;
+        if (animalCount) {
+            let cycles = 0;
+            let interval = getFarmProductionInterval(production.stock);
+            while (wallClock - production.lastAt >= interval && cycles < 10000) {
+                production.stock += animalCount;
+                production.lastAt += interval;
+                interval = getFarmProductionInterval(production.stock);
+                cycles += 1;
+            }
+        } else {
+            production.lastAt = wallClock;
+        }
+    }
+    for (const hologram of gameState.farmHolograms) {
+        hologram.position.y = hologram.userData.baseY + Math.sin(now * 0.0025 + hologram.userData.phase) * 0.16;
+        hologram.material.opacity = 0.78 + Math.sin(now * 0.004 + hologram.userData.phase) * 0.12;
+        drawFarmHologram(hologram, wallClock);
+    }
+}
+
+function completeMission(missionType, count = 1) {
+    const mission = gameState.missions.find((item) => item.type === missionType && item.progress < item.goal);
+    if (!mission) return;
+
+    mission.progress = Math.min(mission.goal, mission.progress + count);
+    if (mission.progress >= mission.goal) {
+        gameState.coins += mission.reward;
+        gameState.missions = gameState.missions.filter((item) => item !== mission);
+        const nextId = Math.max(0, ...gameState.missions.map((item) => item.id)) + 1;
+        const nextMission = createMission(nextId);
+        gameState.missions.push(nextMission);
+
+        const missionsPanel = document.getElementById('missionsPanel');
+        if (missionsPanel) {
+            missionsPanel.classList.remove('active');
+            missionsPanel.setAttribute('aria-hidden', 'true');
+        }
+        const missionsTab = document.querySelector('[aria-controls="missionsPanel"]');
+        if (missionsTab) {
+            missionsTab.classList.remove('active');
+            missionsTab.setAttribute('aria-selected', 'false');
+        }
+
+        updateUI();
+        addNotification(`Missão concluída! +💰 ${mission.reward}. Nova missão: ${nextMission.title}.`, '#f39c12');
+        playSound('coin');
+        return;
+    }
+
+    updateUI();
+}
+
+function getTileAt(x, z) {
+    return tileMap.get(`${x},${z}`);
+}
+
+function createCropMesh(type) {
+    const cropGroup = new THREE.Group();
+    const cropType = CROP_LABELS[type] || type;
+    const greenMat = new THREE.MeshLambertMaterial({ color: 0x2e8b57 });
+
+    if (cropType === 'Cenoura') {
+        for (let i = 0; i < 3; i++) {
+            const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.4, 4), greenMat);
+            leaf.position.set((i - 1) * 0.08, 0.25, 0);
+            leaf.rotation.z = (i - 1) * 0.2;
+            cropGroup.add(leaf);
+        }
+
+        const topCarrot = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.08, 0.04, 0.2, 6),
+            new THREE.MeshLambertMaterial({ color: 0xff7f50 })
+        );
+        topCarrot.position.set(0, 0.08, 0);
+        cropGroup.add(topCarrot);
+    } else if (cropType === 'Tomate') {
+        const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22, 0), greenMat);
+        bush.position.set(0, 0.25, 0);
+        cropGroup.add(bush);
+
+        const tomatoMat = new THREE.MeshLambertMaterial({ color: 0xdc143c });
+        for (let i = 0; i < 3; i++) {
+            const tomato = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), tomatoMat);
+            const angle = (i / 3) * Math.PI * 2;
+            tomato.position.set(Math.cos(angle) * 0.14, 0.2 + (i * 0.05), Math.sin(angle) * 0.14);
+            cropGroup.add(tomato);
+        }
+    } else if (cropType === 'Trigo') {
+        const wheatMat = new THREE.MeshLambertMaterial({ color: 0xdaa520 });
+        for (let i = 0; i < 4; i++) {
+            const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.5, 5), wheatMat);
+            const offsetX = i % 2 === 0 ? 0.05 : -0.05;
+            const offsetZ = i > 1 ? 0.05 : -0.05;
+            stalk.position.set(offsetX, 0.25, offsetZ);
+            stalk.rotation.z = i % 2 === 0 ? 0.08 : -0.08;
+            cropGroup.add(stalk);
+        }
+    } else if (cropType === 'Milho') {
+        const stalkMat = new THREE.MeshLambertMaterial({ color: 0x3f9b3a });
+        const cobMat = new THREE.MeshLambertMaterial({ color: 0xf2c631 });
+        const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 0.6, 5), stalkMat);
+        stalk.position.y = 0.3;
+        cropGroup.add(stalk);
+        for (const side of [-1, 1]) {
+            const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.03, 0.07), stalkMat);
+            leaf.position.set(side * 0.1, 0.35, 0);
+            leaf.rotation.z = side * 0.5;
+            cropGroup.add(leaf);
+        }
+        const cob = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.18, 6), cobMat);
+        cob.position.set(0.08, 0.48, 0);
+        cob.rotation.z = -0.35;
+        cropGroup.add(cob);
+    }
+
+    return cropGroup;
+}
+
+function plantCropOnTile(tile) {
+    if (!tile || tile.userData.occupied || tile.userData.building) {
+        addNotification('Esse espaço não está disponível.', '#ef4444');
+        return;
+    }
+
+    if (gameState.energy < 5) {
+        addNotification('Energia insuficiente! Aguarde recarregar ou use um tônico.', '#f59e0b');
+        return;
+    }
+
+    const cropCost = CROP_COSTS[gameState.selectedCrop] || 10;
+    const hasSeed = gameState.seeds[gameState.selectedCrop] > 0;
+    if (!hasSeed && gameState.coins < cropCost) {
+        addNotification('Dinheiro insuficiente para plantar!', '#ef4444');
+        return;
+    }
+
+    if (hasSeed) {
+        gameState.seeds[gameState.selectedCrop] -= 1;
+    } else {
+        gameState.coins -= cropCost;
+    }
+    gameState.energy = Math.max(0, gameState.energy - 5);
+    tile.userData.occupied = true;
+    tile.userData.crop = {
+        type: gameState.selectedCrop,
+        plantedAt: performance.now(),
+        growth: 0,
+        ready: false
+    };
+
+    const cropMesh = createCropMesh(gameState.selectedCrop);
+    cropMesh.position.set(tile.position.x, 0.3, tile.position.z);
+    scene.add(cropMesh);
+    cropMeshes.push(cropMesh);
+    tile.userData.cropMesh = cropMesh;
+    plantedTiles.add(tile);
+
+    playSound('plant');
+    addNotification(`${CROP_LABELS[gameState.selectedCrop]} plantada!`);
+    completeMission('plant');
+    updateUI();
+}
+
+function harvestTile(tile) {
+    if (!tile || !tile.userData.crop || !tile.userData.crop.ready) {
+        if (tile && tile.userData.crop) {
+            addNotification('Ainda não está pronto!', '#f59e0b');
+        }
+        return;
+    }
+
+    const cropType = tile.userData.crop.type;
+    gameState.inventory[cropType] += 1;
+
+    if (tile.userData.cropMesh) {
+        scene.remove(tile.userData.cropMesh);
+        tile.userData.cropMesh = null;
+    }
+
+    tile.userData.occupied = false;
+    tile.userData.crop = null;
+    plantedTiles.delete(tile);
+
+    playSound('harvest');
+    addNotification(`${CROP_LABELS[cropType]} colhida!`, '#16a34a');
+    completeMission('harvest');
+    updateUI();
+}
+
+function updateCropGrowth() {
+    const now = performance.now();
+    for (const tile of plantedTiles) {
+        const crop = tile.userData.crop;
+        if (!crop || !crop.type) continue;
+
+        const totalGrowMs = (GROW_TIMES[crop.type] || 10) * 1000;
+        const elapsed = now - crop.plantedAt;
+        const progress = Math.min(1, elapsed / totalGrowMs);
+        crop.growth = progress;
+        crop.ready = progress >= 1;
+
+        if (tile.userData.cropMesh) {
+            const scale = 0.55 + progress * 1.2;
+            tile.userData.cropMesh.scale.set(1, scale, 1);
+            tile.userData.cropMesh.position.y = 0.18 + progress * 0.16;
+        }
+    }
+}
+
+function getHarvestAreaKey(tile) {
+    const origin = -Math.floor(gameState.gridSize / 2);
+    const areaX = Math.floor((tile.userData.x - origin) / 5);
+    const areaZ = Math.floor((tile.userData.z - origin) / 5);
+    return `${areaX},${areaZ}`;
+}
+
+function drawHarvestHologram(hologram, count) {
+    if (hologram.userData.lastCount === count) return;
+    const { canvas, context, texture } = hologram.userData;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = 'rgba(35, 91, 47, 0.94)';
+    context.strokeStyle = '#d5ed83';
+    context.lineWidth = 8;
+    roundRectPath(context, 8, 8, canvas.width - 16, canvas.height - 16, 34);
+    context.fill();
+    context.stroke();
+    context.textBaseline = 'middle';
+    context.textAlign = 'center';
+    context.font = '76px Segoe UI Emoji';
+    context.fillStyle = '#fff9e9';
+    context.fillText('🧺', 95, 83);
+    context.textAlign = 'left';
+    context.font = 'bold 42px Trebuchet MS';
+    context.fillStyle = '#fff9e9';
+    context.fillText('COLHER', 160, 70);
+    context.font = 'bold 28px Trebuchet MS';
+    context.fillStyle = '#d5ed83';
+    context.fillText(`5×5 · ${count} prontas`, 162, 120);
+    texture.needsUpdate = true;
+    hologram.userData.lastCount = count;
+}
+
+function updateHarvestHolograms(now) {
+    const readyByArea = new Map();
+    for (const tile of plantedTiles) {
+        if (!tile.userData.crop?.ready) continue;
+        const key = getHarvestAreaKey(tile);
+        if (!readyByArea.has(key)) readyByArea.set(key, []);
+        readyByArea.get(key).push(tile);
+    }
+
+    const origin = -Math.floor(gameState.gridSize / 2);
+    for (const [key, readyTiles] of readyByArea) {
+        let hologram = harvestHolograms.get(key);
+        if (!hologram) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 160;
+            const context = canvas.getContext('2d');
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.encoding = THREE.sRGBEncoding;
+            hologram = new THREE.Sprite(new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                opacity: 0.94
+            }));
+            hologram.scale.set(3.15, 0.98, 1);
+            hologram.renderOrder = 12;
+            hologram.userData = {
+                groupKey: key,
+                baseY: 2.2,
+                phase: Math.random() * Math.PI * 2,
+                canvas,
+                context,
+                texture,
+                lastCount: 0
+            };
+            scene.add(hologram);
+            harvestHolograms.set(key, hologram);
+        }
+
+        const [areaX, areaZ] = key.split(',').map(Number);
+        hologram.position.set(
+            (origin + areaX * 5 + 2) * 1.6,
+            hologram.userData.baseY + Math.sin(now * 0.0025 + hologram.userData.phase) * 0.12,
+            (origin + areaZ * 5 + 2) * 1.6
+        );
+        hologram.material.opacity = 0.82 + Math.sin(now * 0.004 + hologram.userData.phase) * 0.12;
+        drawHarvestHologram(hologram, readyTiles.length);
+    }
+
+    for (const [key, hologram] of harvestHolograms) {
+        if (readyByArea.has(key)) continue;
+        scene.remove(hologram);
+        hologram.material.map.dispose();
+        hologram.material.dispose();
+        harvestHolograms.delete(key);
+    }
+}
+
+function collectHarvestArea(groupKey) {
+    const harvested = { carrot: 0, wheat: 0, tomato: 0, corn: 0 };
+    for (const tile of groundTiles) {
+        if (getHarvestAreaKey(tile) !== groupKey || !tile.userData.crop?.ready) continue;
+        harvested[tile.userData.crop.type] += 1;
+        if (tile.userData.cropMesh) {
+            scene.remove(tile.userData.cropMesh);
+            tile.userData.cropMesh = null;
+        }
+        tile.userData.occupied = false;
+        tile.userData.crop = null;
+        plantedTiles.delete(tile);
+    }
+
+    const total = Object.values(harvested).reduce((sum, count) => sum + count, 0);
+    if (!total) return;
+    for (const [crop, count] of Object.entries(harvested)) {
+        gameState.inventory[crop] += count;
+        for (let index = 0; index < count; index++) completeMission('harvest');
+    }
+    updateUI();
+    updateHarvestHolograms(performance.now());
+    const details = Object.entries(harvested)
+        .filter(([, count]) => count > 0)
+        .map(([crop, count]) => `${count} ${CROP_NAMES[crop]}`)
+        .join(', ');
+    playSound('harvest');
+    addNotification(`Colheita recolhida: ${details}.`, '#16a34a');
+}
+
+function selectBuilding(type) {
+    clearPlacementPreview();
+    document.getElementById('demolishCancel')?.classList.remove('active');
+    if (gameState.currentMode === 'farm-placement' || gameState.currentMode === 'expand') {
+        gameState.pendingFarmPlacement = null;
+        if (placementPreviousCameraDistance !== null) finishPlacementMode();
+    }
+    if (type === 'demolish') {
+        gameState.selectedBuilding = null;
+        gameState.currentMode = 'demolish';
+        document.getElementById('demolishCancel')?.classList.add('active');
+        addNotification('Demolidor ativado. Clique em uma construção para demolir.');
+        playSound('click');
+        toggleBuildMenu();
+        return;
+    }
+    if (type === 'expand') {
+        gameState.selectedBuilding = null;
+        beginPlacementMode('expand');
+        playSound('click');
+        toggleBuildMenu();
+        updatePlacementControls();
+        return;
+    }
+
+    gameState.selectedBuilding = type;
+    gameState.currentMode = 'build';
+    document.getElementById('demolishCancel')?.classList.remove('active');
+    addNotification(`Modo de construção: ${type}`);
+    playSound('click');
+    toggleBuildMenu();
+}
+
+function expandLandAtPoint(point) {
+    const selection = getPlacementSelection(point, 'expand');
+    setPlacementPreview(selection);
+    commitPlacementSelection(selection);
+}
+
+function placeAnimalFarmAtPoint(point) {
+    const selection = getPlacementSelection(point, 'farm-placement');
+    setPlacementPreview(selection);
+    commitPlacementSelection(selection);
+}
+
+function updatePlacementControls() {
+    const controls = document.getElementById('placementControls');
+    const message = document.getElementById('placementMessage');
+    const confirmButton = document.getElementById('placementConfirm');
+    if (!controls || !message || !confirmButton) return;
+
+    const isPlacing = gameState.currentMode === 'expand' || gameState.currentMode === 'farm-placement';
+    controls.classList.toggle('active', isPlacing);
+    if (!isPlacing) return;
+
+    const selection = currentPlacementSelection;
+    const isExpansion = gameState.currentMode === 'expand';
+    const cost = isExpansion ? 200 : gameState.pendingFarmPlacement?.cost || 0;
+    message.hidden = isExpansion;
+    confirmButton.textContent = isExpansion ? 'Confirmar terreno' : 'Confirmar fazenda';
+    if (!selection) {
+        message.textContent = 'Mova o cursor sobre a área livre para posicionar a fazenda 5×5.';
+        confirmButton.disabled = true;
+        return;
+    }
+
+    if (!selection.valid) {
+        message.textContent = 'Área bloqueada: escolha uma área verde livre no mapa.';
+        confirmButton.disabled = true;
+        return;
+    }
+
+    if (gameState.coins < cost) {
+        message.textContent = `Área livre, mas faltam moedas (custo: ${cost}).`;
+        confirmButton.disabled = true;
+        return;
+    }
+
+    message.textContent = `Área livre (${isExpansion ? '4×4' : '5×5'}). Clique na área ou confirme aqui.`;
+    confirmButton.disabled = false;
+}
+
+function confirmPlacement() {
+    if (!currentPlacementSelection) {
+        addNotification('Mova o cursor até uma área livre antes de confirmar.', '#f59e0b');
+        return;
+    }
+    commitPlacementSelection(currentPlacementSelection);
+}
+
+function cancelPlacement() {
+    gameState.pendingFarmPlacement = null;
+    gameState.selectedBuilding = null;
+    finishPlacementMode();
+    clearPlacementPreview();
+    updatePlacementControls();
+    addNotification('Posicionamento cancelado.', '#f59e0b');
+}
+
+function toggleShopMenu() {
+    const menu = document.getElementById('shopMenu');
+    if (!menu) return;
+    const shouldOpen = !menu.classList.contains('active');
+    menu.classList.toggle('active', shouldOpen);
+    if (shouldOpen) {
+        playSound('click');
+        closeSettings();
+        closeDeveloperPanel();
+        document.getElementById('buildMenu')?.classList.remove('active');
+        closeSidePanels();
+        toggleCropMenu(false);
+    }
+}
+
+function toggleBuildMenu() {
+    const menu = document.getElementById('buildMenu');
+    if (!menu) return;
+    const shouldOpen = !menu.classList.contains('active');
+    menu.classList.toggle('active', shouldOpen);
+    if (shouldOpen) {
+        playSound('click');
+        closeSettings();
+        closeDeveloperPanel();
+        document.getElementById('shopMenu')?.classList.remove('active');
+        closeSidePanels();
+        toggleCropMenu(false);
+    }
+}
+
+function selectCrop(crop) {
+    gameState.selectedCrop = crop;
+    updateCropSelector();
+    toggleCropMenu(false);
+    playSound('click');
+    addNotification(`Semente escolhida: ${CROP_LABELS[crop]}`);
+}
+
+function updateCropSelector() {
+    const crops = {
+        carrot: { name: 'Cenoura', icon: '🥕' },
+        wheat: { name: 'Trigo', icon: '🌾' },
+        tomato: { name: 'Tomate', icon: '🍅' },
+        corn: { name: 'Milho', icon: '🌽' }
+    };
+    const selected = crops[gameState.selectedCrop];
+    if (!selected) return;
+    const refs = getCropUiRefs();
+
+    if (refs.mobileIcon) refs.mobileIcon.textContent = selected.icon;
+    if (refs.mobileName) refs.mobileName.textContent = selected.name;
+    if (refs.mobileDetails) refs.mobileDetails.textContent = `Custo: 💰 ${CROP_COSTS[gameState.selectedCrop]} · Sementes: ${gameState.seeds[gameState.selectedCrop]}`;
+
+    refs.cropOptions.forEach((option) => {
+        option.classList.toggle('active', option.dataset.crop === gameState.selectedCrop);
+    });
+    refs.mobileCropOptions.forEach((option) => {
+        option.classList.toggle('active', option.dataset.mobileCrop === gameState.selectedCrop);
+    });
+    refs.seedCounts.forEach((countEl) => {
+        const crop = countEl.closest('[data-crop]').dataset.crop;
+        const count = gameState.seeds[crop] || 0;
+        countEl.textContent = `${count} ${count === 1 ? 'semente disponível' : 'sementes disponíveis'}`;
+    });
+    refs.mobileSeedCounts.forEach((countEl) => {
+        const crop = countEl.dataset.mobileSeedCount;
+        const count = gameState.seeds[crop] || 0;
+        countEl.textContent = `${count} ${count === 1 ? 'semente' : 'sementes'}`;
+    });
+    refs.plantButtons.forEach((button) => {
+        button.disabled = gameState.seeds[button.dataset.plantCrop] < 1;
+    });
+}
+
+function toggleCropMenu(forceOpen) {
+    const menus = [
+        document.getElementById('cropMenuDesktop'),
+        document.getElementById('cropMenuMobile')
+    ].filter(Boolean);
+    if (!menus.length) return;
+    const isMobile = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+    const desktop = !isMobile;
+    const activeMenu = menus[desktop ? 0 : 1] || menus[0];
+    const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !activeMenu.classList.contains('active');
+    if (shouldOpen) {
+        playSound('click');
+        closeSettings();
+        closeDeveloperPanel();
+        document.getElementById('shopMenu')?.classList.remove('active');
+        document.getElementById('buildMenu')?.classList.remove('active');
+        closeSidePanels();
+    }
+    menus.forEach((menu) => menu.classList.toggle('active', shouldOpen && menu === activeMenu));
+    document.getElementById('cropMenuToggle')?.setAttribute('aria-expanded', String(shouldOpen && desktop));
+    const mobileToggle = document.getElementById('mobileCropMenuToggle');
+    mobileToggle?.setAttribute('aria-expanded', String(shouldOpen && !desktop));
+    if (mobileToggle) {
+        const selectedCrop = CROP_LABELS[gameState.selectedCrop] || 'semente';
+        mobileToggle.textContent = shouldOpen && !desktop ? 'Fechar sementes ×' : `🌱 Sementes: ${selectedCrop}`;
+    }
+}
+
+function buyCropPack(crop) {
+    const cost = SEED_PACK_COSTS[crop];
+    if (cost === undefined) return;
+    if (gameState.coins < cost) {
+        addNotification('Dinheiro insuficiente!', '#ef4444');
+        return;
+    }
+    gameState.coins -= cost;
+    gameState.seeds[crop] += 5;
+    updateUI();
+    playSound('coin');
+    addNotification(`+5 sementes de ${CROP_LABELS[crop].toLowerCase()}.`, '#10b981');
+}
+
+function plantSelectedCrop(crop) {
+    gameState.selectedCrop = crop;
+    updateCropSelector();
+    toggleCropMenu(false);
+    startPlanting();
+}
+
+function startPlanting() {
+    gameState.pendingFarmPlacement = null;
+    clearPlacementPreview();
+    gameState.currentMode = 'plant';
+    gameState.selectedBuilding = null;
+    document.getElementById('demolishCancel')?.classList.remove('active');
+    playSound('click');
+    addNotification(`Modo plantio ativado. Plantando: ${CROP_LABELS[gameState.selectedCrop]}.`);
+}
+
+function harvestMode() {
+    gameState.pendingFarmPlacement = null;
+    clearPlacementPreview();
+    gameState.currentMode = 'harvest';
+    gameState.selectedBuilding = null;
+    document.getElementById('demolishCancel')?.classList.remove('active');
+    playSound('click');
+    addNotification('Modo colheita ativado. Clique em uma planta madura.');
+}
+
+function createBuildingMesh(type) {
+    const group = new THREE.Group();
+    if (type === 'barn') {
+        const base = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 1.8), new THREE.MeshLambertMaterial({ color: 0xd7b899 }));
+        base.position.y = 0.6;
+        base.castShadow = true;
+        group.add(base);
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.1, 4), new THREE.MeshLambertMaterial({ color: 0xdd5a36 }));
+        roof.position.y = 1.7;
+        roof.rotation.y = Math.PI / 4;
+        roof.castShadow = true;
+        group.add(roof);
+    } else if (type === 'well') {
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 0.9, 16), new THREE.MeshLambertMaterial({ color: 0x9e9e9e }));
+        base.position.y = 0.45;
+        group.add(base);
+        const water = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.45, 0.25, 16), new THREE.MeshLambertMaterial({ color: 0x3ca6e7, transparent: true, opacity: 0.8 }));
+        water.position.y = 0.9;
+        group.add(water);
+    } else if (type === 'coop') {
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.0, 1.4), new THREE.MeshLambertMaterial({ color: 0xd5a476 }));
+        body.position.y = 0.5;
+        group.add(body);
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.2, 1.7), new THREE.MeshLambertMaterial({ color: 0xe1b368 }));
+        roof.position.y = 1.05;
+        group.add(roof);
+    } else if (type === 'fence') {
+        const post1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.8, 0.12), new THREE.MeshLambertMaterial({ color: 0x8b5e3c }));
+        const post2 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.8, 0.12), new THREE.MeshLambertMaterial({ color: 0x8b5e3c }));
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.1, 0.1), new THREE.MeshLambertMaterial({ color: 0x8b5e3c }));
+        post1.position.set(-0.5, 0.4, 0);
+        post2.position.set(0.5, 0.4, 0);
+        bar.position.y = 0.4;
+        group.add(post1, post2, bar);
+    } else if (type === 'tree') {
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 1.3, 10), new THREE.MeshLambertMaterial({ color: 0x7b4b2a }));
+        trunk.position.y = 0.65;
+        group.add(trunk);
+        const leaves = new THREE.Mesh(new THREE.SphereGeometry(0.8, 12, 12), new THREE.MeshLambertMaterial({ color: 0x3e9b4a }));
+        leaves.position.y = 1.5;
+        group.add(leaves);
+    }
+    return group;
+}
+
+function buildStructureOnTile(tile, type) {
+    if (!tile) return;
+    if (!tile.userData.isExpansion) {
+        addNotification('Construções só podem ser colocadas no terreno novo. Use Expandir primeiro.', '#f59e0b');
+        return;
+    }
+    if (!tile || tile.userData.occupied || tile.userData.building) {
+        addNotification('Esse ponto não pode receber construção.', '#ef4444');
+        return;
+    }
+
+    const costs = { barn: 150, well: 100, coop: 200, fence: 20, tree: 30 };
+    const amount = costs[type] || 0;
+    if (gameState.coins < amount) {
+        addNotification('Dinheiro insuficiente para construir!', '#ef4444');
+        return;
+    }
+
+    gameState.coins -= amount;
+    tile.userData.building = type;
+    tile.userData.buildCost = amount;
+    tile.userData.occupied = true;
+
+    const group = createBuildingMesh(type);
+    group.position.set(tile.position.x, 0.1, tile.position.z);
+    group.userData = { tile, type, cost: amount };
+    scene.add(group);
+    buildables.push(group);
+
+    invalidateEnvironmentBlockers();
+    playSound('build');
+    addNotification('Construção concluída!', '#48bb78');
+    completeMission('build');
+    updateUI();
+}
+
+function demolishAnimalFarm(type) {
+    const costs = { chicken: 100, cow: 160, pig: 130 };
+    const farmNames = { chicken: 'fazenda de galinhas', cow: 'fazenda de vacas', pig: 'fazenda de porcos' };
+    const refund = Math.floor(costs[type] / 2);
+    if (!window.confirm(`Demolir ${farmNames[type]}? Você receberá 💰 ${refund} (metade do valor pago).`)) {
+        addNotification('Demolição cancelada.', '#f59e0b');
+        return;
+    }
+
+    for (const animal of gameState.animals.filter((item) => item.type === type)) scene.remove(animal.mesh);
+    gameState.animals = gameState.animals.filter((animal) => animal.type !== type);
+    gameState.farms[type] = false;
+    gameState.farmOrder = gameState.farmOrder.filter((farmType) => farmType !== type);
+    delete gameState.farmLocations[type];
+    if (gameState.farmProducts[type]) gameState.farmProducts[type] = { stock: 0, lastAt: Date.now() };
+    gameState.coins += refund;
+    buildAnimalFarms();
+    updateUI();
+    playSound('coin');
+    addNotification(`${farmNames[type]} demolida. Reembolso: 💰 ${refund}.`, '#10b981');
+}
+
+function demolishStructure(tile) {
+    if (!tile || !tile.userData.building) {
+        addNotification('Clique em uma construção para demolir.', '#f59e0b');
+        return;
+    }
+
+    const structureName = { barn: 'celeiro', well: 'poço', coop: 'galinheiro', fence: 'cerca', tree: 'árvore' }[tile.userData.building] || 'construção';
+    const refund = Math.floor((tile.userData.buildCost || 0) / 2);
+    if (!window.confirm(`Demolir ${structureName}? Você receberá 💰 ${refund} (metade do valor pago).`)) {
+        addNotification('Demolição cancelada.', '#f59e0b');
+        return;
+    }
+
+    const buildableIndex = buildables.findIndex((object) => object.userData.tile === tile);
+    if (buildableIndex !== -1) {
+        const [object] = buildables.splice(buildableIndex, 1);
+        scene.remove(object);
+    }
+    tile.userData.building = null;
+    tile.userData.buildCost = 0;
+    tile.userData.occupied = false;
+    gameState.coins += refund;
+    invalidateEnvironmentBlockers();
+    playSound('coin');
+    addNotification(`${structureName} demolido. Reembolso: 💰 ${refund}.`, '#10b981');
+    updateUI();
+}
+
+function cancelDemolishMode() {
+    if (gameState.currentMode !== 'demolish') return;
+    gameState.currentMode = 'normal';
+    gameState.selectedBuilding = null;
+    document.getElementById('demolishCancel')?.classList.remove('active');
+}
+
+function getTileFromIntersection(intersection) {
+    let object = intersection?.object;
+    while (object && !object.userData.tile) object = object.parent;
+    return object?.userData.tile || null;
+}
+
+function handleTileClick(intersected) {
+    if (!intersected) return;
+    const tile = getTileFromIntersection(intersected);
+    if (!tile) return;
+    if (gameState.currentMode === 'farm-placement') {
+        placeAnimalFarmAtPoint(tile.position);
+        return;
+    }
+    if (gameState.currentMode === 'expand') {
+        expandLandAtPoint(tile.position);
+        return;
+    }
+    if (gameState.currentMode === 'demolish') {
+        if (tile.userData.animalFarmType) {
+            demolishAnimalFarm(tile.userData.animalFarmType);
+            return;
+        }
+        demolishStructure(tile);
+        return;
+    }
+    if (tile.userData.animalFarmType && ['plant', 'build'].includes(gameState.currentMode)) {
+        addNotification('Essa área é reservada para os animais.', '#f59e0b');
+        return;
+    }
+
+    if (gameState.currentMode === 'plant') {
+        plantCropOnTile(tile);
+    } else if (gameState.currentMode === 'harvest') {
+        harvestTile(tile);
+    } else if (gameState.currentMode === 'build' && gameState.selectedBuilding) {
+        buildStructureOnTile(tile, gameState.selectedBuilding);
+    }
+}
+
+function buildGround() {
+    for (const tile of groundTiles) {
+        scene.remove(tile);
+    }
+    groundTiles.length = 0;
+    tileMap.clear();
+    plantedTiles.clear();
+
+    const half = Math.floor(gameState.gridSize / 2);
+    for (let x = -half; x <= half; x++) {
+        for (let z = -half; z <= half; z++) {
+            createGroundTile(x, z);
+        }
+    }
+
+    groundTiles.forEach((tile) => {
+        tile.userData.tile = tile;
+    });
+}
+
+function createGroundTile(x, z, isExpansion = false) {
+    const material = new THREE.MeshLambertMaterial({
+        color: isExpansion
+            ? (x % 2 === z % 2 ? 0x76a94d : 0x699643)
+            : (x % 2 === z % 2 ? 0x75401f : 0x62361b)
+    });
+    const tile = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 0.2, 1.5),
+        material
+    );
+    tile.position.set(x * 1.6, 0, z * 1.6);
+    tile.receiveShadow = true;
+    tile.userData = { x, z, key: `${x},${z}`, occupied: false, crop: null, building: null, tile, isExpansion };
+    if (!isExpansion) {
+        for (const furrowZ of [-0.42, -0.14, 0.14, 0.42]) {
+            const furrow = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.012, 0.025), furrowMaterial);
+            furrow.position.set(0, 0.108, furrowZ);
+            tile.add(furrow);
+        }
+    }
+    tileMap.set(`${x},${z}`, tile);
+    scene.add(tile);
+    groundTiles.push(tile);
+    return tile;
+}
+
+function buildAnimalFarms() {
+    for (const landTiles of Object.values(gameState.farmLandTiles)) {
+        for (const tile of landTiles) {
+            scene.add(tile);
+            if (!groundTiles.includes(tile)) groundTiles.push(tile);
+            tileMap.set(tile.userData.key, tile);
+        }
+    }
+    gameState.farmLandTiles = {};
+
+    for (const group of Object.values(gameState.farmAreaGroups)) {
+        group.traverse((object) => {
+            if (object.userData.hologram) {
+                object.material.map.dispose();
+                object.material.dispose();
+            }
+        });
+        scene.remove(group);
+    }
+    gameState.farmAreaGroups = {};
+    gameState.farmCenters = {};
+    gameState.animalFarmTiles = [];
+    gameState.farmHolograms = [];
+
+    const types = ['chicken', 'cow', 'pig'];
+    const colors = { chicken: [0x729844, 0x64883b], cow: [0x789347, 0x68813e], pig: [0x7e9848, 0x6e8640] };
+    const slot = Math.floor(gameState.gridSize / 2) * 1.6 + 4.5;
+
+    for (const type of gameState.farmOrder) {
+        if (!types.includes(type) || !gameState.farms[type]) continue;
+        const typeIndex = gameState.farmOrder.indexOf(type);
+        const location = gameState.farmLocations[type] || { x: slot + typeIndex * 9.6, z: 0 };
+        const centerX = location.x;
+        const centerZ = location.z;
+        const center = { x: centerX, z: centerZ, minX: centerX - 3.2, maxX: centerX + 3.2, minZ: centerZ - 3.2, maxZ: centerZ + 3.2 };
+        gameState.farmLocations[type] = { x: centerX, z: centerZ };
+        const area = new THREE.Group();
+        const half = 2;
+        const reservedTiles = [];
+
+        for (let x = -half; x <= half; x++) {
+            for (let z = -half; z <= half; z++) {
+                const landTile = groundTiles.find((candidate) =>
+                    candidate.userData.x === Math.round(centerX / 1.6) + x && candidate.userData.z === Math.round(centerZ / 1.6) + z
+                );
+                if (landTile) {
+                    scene.remove(landTile);
+                    groundTiles.splice(groundTiles.indexOf(landTile), 1);
+                    tileMap.delete(landTile.userData.key);
+                    reservedTiles.push(landTile);
+                }
+            }
+        }
+        gameState.farmLandTiles[type] = reservedTiles;
+
+        for (let x = -half; x <= half; x++) {
+            for (let z = -half; z <= half; z++) {
+                const tile = new THREE.Mesh(
+                    new THREE.BoxGeometry(1.5, 0.2, 1.5),
+                    new THREE.MeshLambertMaterial({ color: x % 2 === z % 2 ? colors[type][0] : colors[type][1] })
+                );
+                tile.position.set(centerX + x * 1.6, 0, centerZ + z * 1.6);
+                tile.receiveShadow = true;
+                tile.userData = { x: tile.position.x, z: tile.position.z, key: `${type}-${x},${z}`, occupied: false, crop: null, building: null, tile, animalFarmType: type };
+                area.add(tile);
+                gameState.animalFarmTiles.push(tile);
+            }
+        }
+
+        const wood = new THREE.MeshLambertMaterial({ color: 0x805a38 });
+        const postGeometry = new THREE.BoxGeometry(0.16, 1.35, 0.16);
+        const railX = new THREE.BoxGeometry(1.62, 0.12, 0.12);
+        const railZ = new THREE.BoxGeometry(0.12, 0.12, 1.62);
+        for (let i = -half; i <= half; i++) {
+            for (const edge of [-1, 1]) {
+                const postX = new THREE.Mesh(postGeometry, wood);
+                postX.position.set(centerX + i * 1.6, 0.65, centerZ + edge * 4);
+                area.add(postX);
+                const postZ = new THREE.Mesh(postGeometry, wood);
+                postZ.position.set(centerX + edge * 4, 0.65, centerZ + i * 1.6);
+                area.add(postZ);
+            }
+        }
+        for (let i = -half; i < half; i++) {
+            for (const height of [0.48, 1.02]) {
+                for (const edge of [-1, 1]) {
+                    const xRail = new THREE.Mesh(railX, wood);
+                    xRail.position.set(centerX + (i + 0.5) * 1.6, height, centerZ + edge * 4);
+                    area.add(xRail);
+                    const zRail = new THREE.Mesh(railZ, wood);
+                    zRail.position.set(centerX + edge * 4, height, centerZ + (i + 0.5) * 1.6);
+                    area.add(zRail);
+                }
+            }
+        }
+
+        const sign = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.65, 0.14), new THREE.MeshLambertMaterial({ color: type === 'chicken' ? 0xe7b84d : type === 'cow' ? 0x7b563d : 0xd98578 }));
+        sign.position.set(centerX, 1.25, centerZ - 4.35);
+        area.add(sign);
+        if (type === 'chicken' || type === 'cow' || type === 'pig') createFarmHologram(type, centerX, centerZ, area);
+        scene.add(area);
+        gameState.farmCenters[type] = center;
+        gameState.farmAreaGroups[type] = area;
+    }
+
+    invalidateEnvironmentBlockers();
+}
+
+function buildFarmEnvironment() {
+    farmEnvironment.traverse((object) => {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+            const materials = Array.isArray(object.material) ? object.material : [object.material];
+            for (const material of materials) {
+                if (material.map) material.map.dispose();
+                material.dispose();
+            }
+        }
+    });
+    farmEnvironment.clear();
+
+    const fieldEdge = Math.floor(gameState.gridSize / 2) * 1.6;
+    const roadZ = fieldEdge + 4.6;
+    const startX = -16;
+    const endX = fieldEdge + 12;
+    gameState.marketRoute = { z: roadZ, startX, endX, stallX: -4.5 };
+
+    const landWidth = WORLD_GROUND_WIDTH;
+    const grassCanvas = document.createElement('canvas');
+    grassCanvas.width = 256;
+    grassCanvas.height = 256;
+    const grassContext = grassCanvas.getContext('2d');
+    grassContext.fillStyle = '#367a32';
+    grassContext.fillRect(0, 0, grassCanvas.width, grassCanvas.height);
+    for (let i = 0; i < 720; i++) {
+        const shade = Math.random() > 0.52 ? 'rgba(190, 205, 82, 0.2)' : 'rgba(20, 55, 25, 0.18)';
+        grassContext.fillStyle = shade;
+        grassContext.beginPath();
+        grassContext.ellipse(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 3, 1 + Math.random() * 2, Math.random() * Math.PI, 0, Math.PI * 2);
+        grassContext.fill();
+    }
+    const grassTexture = new THREE.CanvasTexture(grassCanvas);
+    grassTexture.wrapS = THREE.RepeatWrapping;
+    grassTexture.wrapT = THREE.RepeatWrapping;
+    grassTexture.repeat.set(Math.max(8, landWidth / 5), 14);
+    grassTexture.encoding = THREE.sRGBEncoding;
+    const land = new THREE.Mesh(
+        new THREE.PlaneGeometry(landWidth, WORLD_GROUND_DEPTH),
+        new THREE.MeshLambertMaterial({ map: grassTexture, color: 0xffffff })
+    );
+    land.rotation.x = -Math.PI / 2;
+    land.position.set(0, -0.22, 0);
+    land.receiveShadow = true;
+    farmEnvironment.add(land);
+
+    const roadMaterial = new THREE.MeshLambertMaterial({ color: 0x75441f });
+    const roadEdgeMaterial = new THREE.MeshLambertMaterial({ color: 0xb17a2f });
+    const wheelTrackMaterial = new THREE.MeshLambertMaterial({ color: 0x422715 });
+    const makeRoad = (centerX, centerZ, length, width, alongX = true) => {
+        const road = new THREE.Mesh(
+            alongX ? new THREE.BoxGeometry(length, 0.12, width) : new THREE.BoxGeometry(width, 0.12, length),
+            roadMaterial
+        );
+        road.position.set(centerX, -0.02, centerZ);
+        road.receiveShadow = true;
+        farmEnvironment.add(road);
+    };
+
+    const mainRoadLength = endX - startX;
+    makeRoad((startX + endX) / 2, roadZ, mainRoadLength, 3.3);
+    for (const trackOffset of [-0.58, 0.58]) {
+        const track = new THREE.Mesh(
+            new THREE.BoxGeometry(mainRoadLength, 0.018, 0.09),
+            wheelTrackMaterial
+        );
+        track.position.set((startX + endX) / 2, 0.047, roadZ + trackOffset);
+        farmEnvironment.add(track);
+    }
+    for (const edge of [-1, 1]) {
+        const trim = new THREE.Mesh(
+            new THREE.BoxGeometry(mainRoadLength, 0.035, 0.16),
+            roadEdgeMaterial
+        );
+        trim.position.set((startX + endX) / 2, 0.045, roadZ + edge * 1.68);
+        farmEnvironment.add(trim);
+    }
+
+    makeRoad(0, (roadZ + fieldEdge + 0.9) / 2, roadZ - fieldEdge - 0.9, 2.5, false);
+    const treeMaterials = [
+        new THREE.MeshLambertMaterial({ color: 0x176228 }),
+        new THREE.MeshLambertMaterial({ color: 0x20752a }),
+        new THREE.MeshLambertMaterial({ color: 0x2b842d })
+    ];
+    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x5b3c27 });
+    const addTree = (x, z, size = 1) => {
+        const tree = new THREE.Group();
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * size, 0.25 * size, 1.3 * size, 8), trunkMaterial);
+        trunk.position.y = 0.65 * size;
+        trunk.castShadow = true;
+        tree.add(trunk);
+        const foliage = treeMaterials[Math.floor(Math.random() * treeMaterials.length)];
+        const canopy = [
+            { x: -0.4, z: 0.05, y: 1.9, radius: 0.76, scale: [1.2, 0.95, 1.08] },
+            { x: 0.38, z: -0.12, y: 2.05, radius: 0.78, scale: [1.12, 0.92, 1.08] },
+            { x: 0.02, z: 0.12, y: 2.45, radius: 0.82, scale: [1.15, 0.98, 1.08] },
+            { x: 0.08, z: -0.04, y: 2.92, radius: 0.58, scale: [1.08, 0.95, 1.0] }
+        ];
+        for (const layer of canopy) {
+            const crown = new THREE.Mesh(new THREE.SphereGeometry(layer.radius * size, 12, 10), foliage);
+            crown.position.y = layer.y * size;
+            crown.position.x = layer.x * size;
+            crown.position.z = layer.z * size;
+            crown.scale.set(...layer.scale);
+            crown.castShadow = true;
+            tree.add(crown);
+        }
+        tree.position.set(x, 0, z);
+        farmEnvironment.add(tree);
+    };
+
+    for (let x = startX + 1; x <= endX; x += 9) {
+        addTree(x, roadZ + 7, 0.85 + Math.random() * 0.25);
+        if (x < fieldEdge - 3 || x > fieldEdge + 8) addTree(x, -14, 0.8 + Math.random() * 0.3);
+    }
+    addTree(startX + 2, roadZ - 2, 0.9);
+    addTree(endX - 2, roadZ - 2, 1.05);
+
+    const farmhouse = new THREE.Group();
+    const barnRed = new THREE.MeshLambertMaterial({ color: 0xc6382e });
+    const barnRedLight = new THREE.MeshLambertMaterial({ color: 0xe04b38 });
+    const barnWhite = new THREE.MeshLambertMaterial({ color: 0xf0e7ce });
+    const barnRoof = new THREE.MeshLambertMaterial({ color: 0x2a9b83 });
+    const barnRoofLight = new THREE.MeshLambertMaterial({ color: 0x49b79b });
+    const foundation = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.3, 4.6), new THREE.MeshLambertMaterial({ color: 0x61452f }));
+    foundation.position.y = 0.15;
+    foundation.castShadow = true;
+    farmhouse.add(foundation);
+
+    const barnBody = new THREE.Mesh(new THREE.BoxGeometry(5.1, 3.1, 4.1), barnRed);
+    barnBody.position.y = 1.85;
+    barnBody.castShadow = true;
+    farmhouse.add(barnBody);
+
+    const gableShape = new THREE.Shape();
+    gableShape.moveTo(-2.55, 0);
+    gableShape.lineTo(2.55, 0);
+    gableShape.lineTo(0, 1.85);
+    gableShape.closePath();
+    const gable = new THREE.Mesh(new THREE.ShapeGeometry(gableShape), barnRedLight);
+    gable.position.set(0, 3.4, 2.06);
+    gable.castShadow = true;
+    farmhouse.add(gable);
+
+    const roofLeft = new THREE.Mesh(new THREE.BoxGeometry(3.15, 0.26, 4.8), barnRoof);
+    roofLeft.position.set(-1.28, 4.05, 0);
+    roofLeft.rotation.z = 0.43;
+    roofLeft.castShadow = true;
+    farmhouse.add(roofLeft);
+    const roofRight = new THREE.Mesh(new THREE.BoxGeometry(3.15, 0.26, 4.8), barnRoofLight);
+    roofRight.position.set(1.28, 4.05, 0);
+    roofRight.rotation.z = -0.43;
+    roofRight.castShadow = true;
+    farmhouse.add(roofRight);
+
+    const roofRidge = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 4.95), barnWhite);
+    roofRidge.position.set(0, 4.72, 0);
+    farmhouse.add(roofRidge);
+    const fascia = new THREE.Mesh(new THREE.BoxGeometry(5.35, 0.18, 0.16), barnWhite);
+    fascia.position.set(0, 2.98, 2.13);
+    farmhouse.add(fascia);
+
+    const door = new THREE.Mesh(new THREE.BoxGeometry(2.15, 2.35, 0.13), barnRedLight);
+    door.position.set(0, 1.32, 2.13);
+    farmhouse.add(door);
+    for (const side of [-1, 1]) {
+        const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(0.13, 2.55, 0.17), barnWhite);
+        doorFrame.position.set(side * 1.14, 1.33, 2.17);
+        farmhouse.add(doorFrame);
+        const crossBeam = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.52, 0.16), barnWhite);
+        crossBeam.position.set(side * 0.55, 1.33, 2.22);
+        crossBeam.rotation.z = side * -0.64;
+        farmhouse.add(crossBeam);
+    }
+    const doorTop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.13, 0.17), barnWhite);
+    doorTop.position.set(0, 2.59, 2.18);
+    farmhouse.add(doorTop);
+
+    const loftFrame = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.73, 0.12), barnWhite);
+    loftFrame.position.set(0, 3.72, 2.11);
+    farmhouse.add(loftFrame);
+    const loftWindow = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.46, 0.08), new THREE.MeshLambertMaterial({ color: 0x48a9c0 }));
+    loftWindow.position.set(0, 3.72, 2.19);
+    farmhouse.add(loftWindow);
+
+    for (const side of [-1, 1]) {
+        const cornerTrim = new THREE.Mesh(new THREE.BoxGeometry(0.15, 3.1, 0.16), barnWhite);
+        cornerTrim.position.set(side * 2.48, 1.85, 2.12);
+        farmhouse.add(cornerTrim);
+        const sideWindow = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.78, 0.82), barnWhite);
+        sideWindow.position.set(side * 2.57, 2.0, -0.75);
+        farmhouse.add(sideWindow);
+        const sideGlass = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.52, 0.55), new THREE.MeshLambertMaterial({ color: 0x3d9cb5 }));
+        sideGlass.position.set(side * 2.64, 2.0, -0.75);
+        farmhouse.add(sideGlass);
+    }
+
+    const hayMaterial = new THREE.MeshLambertMaterial({ color: 0xe3ae3f });
+    for (let i = 0; i < 3; i++) {
+        const bale = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.68, 0.72), hayMaterial);
+        bale.position.set(-2.0 + i * 0.9, 0.5, 2.85);
+        bale.rotation.y = (i - 1) * 0.08;
+        bale.castShadow = true;
+        farmhouse.add(bale);
+    }
+
+    const farmhouseX = -fieldEdge - 3.5;
+    const farmhouseZ = fieldEdge - 1.2;
+    farmhouse.position.set(farmhouseX, 0, farmhouseZ);
+    farmEnvironment.add(farmhouse);
+    const houseDoorZ = farmhouseZ + 1.85;
+    const housePathLength = roadZ - houseDoorZ;
+    makeRoad(farmhouseX, (houseDoorZ + roadZ) / 2, housePathLength, 2.35, false);
+    for (const edge of [-1, 1]) {
+        const pathBorder = new THREE.Mesh(
+            new THREE.BoxGeometry(0.12, 0.035, housePathLength),
+            roadEdgeMaterial
+        );
+        pathBorder.position.set(farmhouseX + edge * 1.2, 0.045, (houseDoorZ + roadZ) / 2);
+        farmEnvironment.add(pathBorder);
+    }
+
+    const cropBed = new THREE.Group();
+    const cropSoil = new THREE.Mesh(new THREE.BoxGeometry(12.8, 0.18, 5.2), new THREE.MeshLambertMaterial({ color: 0x704020 }));
+    cropSoil.position.y = -0.04;
+    cropSoil.receiveShadow = true;
+    cropBed.add(cropSoil);
+    const cornLeaf = new THREE.MeshLambertMaterial({ color: 0x258334 });
+    const cornLeafLight = new THREE.MeshLambertMaterial({ color: 0x52ac3d });
+    const cornKernel = new THREE.MeshLambertMaterial({ color: 0xf2c631 });
+    for (let row = 0; row < 5; row++) {
+        for (let column = 0; column < 10; column++) {
+            const plant = new THREE.Group();
+            const height = 1.05 + Math.random() * 0.35;
+            const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.075, height, 6), cornLeaf);
+            stalk.position.y = height / 2;
+            plant.add(stalk);
+            for (const side of [-1, 1]) {
+                for (let leafIndex = 0; leafIndex < 3; leafIndex++) {
+                    const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.045, 0.12), leafIndex % 2 ? cornLeaf : cornLeafLight);
+                    leaf.position.set(side * (0.2 + leafIndex * 0.04), 0.28 + leafIndex * 0.25, 0);
+                    leaf.rotation.z = side * (0.25 + leafIndex * 0.14);
+                    leaf.rotation.y = (row + column + leafIndex) * 0.4;
+                    plant.add(leaf);
+                }
+            }
+            const cob = new THREE.Group();
+            const cobBody = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.34, 8), cornKernel);
+            const cobTipTop = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), cornKernel);
+            const cobTipBottom = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), cornKernel);
+            cobTipTop.position.y = 0.17;
+            cobTipBottom.position.y = -0.17;
+            cob.add(cobBody, cobTipTop, cobTipBottom);
+            cob.position.set(0.1, 0.72, 0.04);
+            cob.rotation.z = -0.32;
+            plant.add(cob);
+            plant.position.set(-5.7 + column * 1.25, 0.06, -2.0 + row * 1.0);
+            cropBed.add(plant);
+        }
+    }
+    cropBed.position.set(0, 0, -10.5);
+    farmEnvironment.add(cropBed);
+
+    const stall = new THREE.Group();
+    const woodMaterial = new THREE.MeshLambertMaterial({ color: 0x60432d });
+    const counter = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.9, 1.1), woodMaterial);
+    counter.position.y = 0.55;
+    counter.castShadow = true;
+    stall.add(counter);
+    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0xc1432b });
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.22, 1.5), roofMaterial);
+    roof.position.y = 2.35;
+    roof.castShadow = true;
+    stall.add(roof);
+    const creamMaterial = new THREE.MeshLambertMaterial({ color: 0xe8d5aa });
+    for (const x of [-1.35, 1.35]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.1, 0.12), woodMaterial);
+        post.position.set(x, 1.25, 0);
+        stall.add(post);
+    }
+    const awning = new THREE.Mesh(new THREE.BoxGeometry(3.18, 0.5, 0.12), creamMaterial);
+    awning.position.set(0, 2.02, 0.78);
+    stall.add(awning);
+    const produce = [0xff8838, 0xd84a3a, 0xe6bd4e];
+    for (let i = 0; i < 5; i++) {
+        const item = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), new THREE.MeshLambertMaterial({ color: produce[i % produce.length] }));
+        item.position.set(-0.85 + i * 0.42, 1.08, 0.05);
+        stall.add(item);
+    }
+    const signCanvas = document.createElement('canvas');
+    signCanvas.width = 512;
+    signCanvas.height = 128;
+    const signContext = signCanvas.getContext('2d');
+    signContext.fillStyle = '#f8e9bd';
+    signContext.fillRect(0, 0, signCanvas.width, signCanvas.height);
+    signContext.fillStyle = '#543c27';
+    signContext.font = 'bold 54px Segoe UI';
+    signContext.textAlign = 'center';
+    signContext.textBaseline = 'middle';
+    signContext.fillText('FEIRA DA FAZENDA', 256, 65);
+    const signTexture = new THREE.CanvasTexture(signCanvas);
+    signTexture.encoding = THREE.sRGBEncoding;
+    const sign = new THREE.Mesh(
+        new THREE.BoxGeometry(2.7, 0.7, 0.12),
+        new THREE.MeshLambertMaterial({ map: signTexture })
+    );
+    sign.position.set(0, 1.95, 0.82);
+    stall.add(sign);
+    stall.position.set(gameState.marketRoute.stallX, 0, roadZ - 2.4);
+    farmEnvironment.add(stall);
+
+    const truck = new THREE.Group();
+    const truckBlue = new THREE.MeshLambertMaterial({ color: 0x1687d2 });
+    const truckBlueLight = new THREE.MeshLambertMaterial({ color: 0x38b6e8 });
+    const tireMaterial = new THREE.MeshLambertMaterial({ color: 0x26302e });
+    const hubMaterial = new THREE.MeshLambertMaterial({ color: 0xd5c9a7 });
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(3.15, 0.48, 1.42), truckBlue);
+    chassis.position.y = 0.72;
+    chassis.castShadow = true;
+    truck.add(chassis);
+
+    const hood = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.38, 1.4), truckBlueLight);
+    hood.position.set(1.08, 1.1, 0);
+    hood.castShadow = true;
+    truck.add(hood);
+
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.95, 1.32), truckBlueLight);
+    cab.position.set(0.05, 1.34, 0);
+    cab.castShadow = true;
+    truck.add(cab);
+
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.56, 1.08), new THREE.MeshLambertMaterial({ color: 0x75c2d0 }));
+    windshield.position.set(0.68, 1.43, 0);
+    truck.add(windshield);
+    for (const x of [-0.92, 1.08]) {
+        for (const side of [-1, 1]) {
+            const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.39, 0.39, 0.22, 12), tireMaterial);
+            wheel.rotation.x = Math.PI / 2;
+            wheel.position.set(x, 0.43, side * 0.77);
+            wheel.castShadow = true;
+            truck.add(wheel);
+            const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.235, 10), hubMaterial);
+            hub.rotation.x = Math.PI / 2;
+            hub.position.copy(wheel.position);
+            truck.add(hub);
+        }
+    }
+
+    for (const side of [-1, 1]) {
+        const sideWindow = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.48, 0.07), new THREE.MeshLambertMaterial({ color: 0x72b8c8 }));
+        sideWindow.position.set(0.05, 1.45, side * 0.68);
+        truck.add(sideWindow);
+    }
+
+    const bedFloor = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.12, 1.22), new THREE.MeshLambertMaterial({ color: 0x536976 }));
+    bedFloor.position.set(-1.0, 1.0, 0);
+    truck.add(bedFloor);
+    for (const side of [-1, 1]) {
+        const bedSide = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.42, 0.12), truckBlue);
+        bedSide.position.set(-1.0, 1.23, side * 0.62);
+        truck.add(bedSide);
+    }
+    const tailgate = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.42, 1.22), truckBlue);
+    tailgate.position.set(-1.53, 1.23, 0);
+    truck.add(tailgate);
+
+    const crateMaterial = new THREE.MeshLambertMaterial({ color: 0xc88937 });
+    const cargoColors = [0xc73b2d, 0x69a93d, 0xe4bf38];
+    for (let i = 0; i < 3; i++) {
+        const crate = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.36, 0.38), crateMaterial);
+        crate.position.set(-1.22 + (i % 2) * 0.42, 1.27 + Math.floor(i / 2) * 0.28, (i - 1) * 0.28);
+        truck.add(crate);
+        const produce = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 8), new THREE.MeshLambertMaterial({ color: cargoColors[i] }));
+        produce.position.set(crate.position.x, crate.position.y + 0.25, crate.position.z);
+        truck.add(produce);
+    }
+    const headlightMaterial = new THREE.MeshLambertMaterial({ color: 0xffe49a, emissive: 0x684512 });
+    for (const side of [-1, 1]) {
+        const light = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.28), headlightMaterial);
+        light.position.set(1.5, 0.92, side * 0.48);
+        truck.add(light);
+    }
+    truck.rotation.y = Math.PI / 2;
+    truck.position.set(gameState.marketRoute.stallX + 5.4, 0, roadZ + 3.15);
+    farmEnvironment.add(truck);
+
+    for (const customer of gameState.customers) {
+        customer.z = roadZ;
+        customer.mesh.position.z = roadZ;
+    }
+}
+
+const playerGroup = new THREE.Group();
+const playerBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.42, 0.48, 1.2, 16),
+    new THREE.MeshLambertMaterial({ color: 0x138bd1 })
+);
+playerBody.position.y = 1.0;
+playerBody.castShadow = true;
+playerGroup.add(playerBody);
+
+const shirtPocket = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.26, 0.055), new THREE.MeshLambertMaterial({ color: 0xf1ba37 }));
+shirtPocket.position.set(0.18, 1.22, 0.405);
+playerGroup.add(shirtPocket);
+const shirtStripe = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.86, 0.04), new THREE.MeshLambertMaterial({ color: 0x8ed9e2 }));
+shirtStripe.position.set(-0.2, 1.02, 0.43);
+playerGroup.add(shirtStripe);
+
+const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.62, 0.22), new THREE.MeshLambertMaterial({ color: 0x9a5b2f }));
+backpack.position.set(0, 1.18, -0.48);
+backpack.castShadow = true;
+playerGroup.add(backpack);
+const backpackTop = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.24), new THREE.MeshLambertMaterial({ color: 0xc3873c }));
+backpackTop.position.set(0, 1.53, -0.48);
+playerGroup.add(backpackTop);
+
+const head = new THREE.Mesh(
+    new THREE.SphereGeometry(0.38, 20, 20),
+    new THREE.MeshLambertMaterial({ color: 0xf2c596 })
+);
+head.position.y = 2.25;
+head.castShadow = true;
+playerGroup.add(head);
+
+const eyeWhite = new THREE.MeshLambertMaterial({ color: 0xfffdf4 });
+const eyeDark = new THREE.MeshLambertMaterial({ color: 0x18251e });
+const browMaterial = new THREE.MeshLambertMaterial({ color: 0x493327 });
+for (const side of [-1, 1]) {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.085, 9, 8), new THREE.MeshLambertMaterial({ color: 0xe6ae83 }));
+    ear.position.set(side * 0.35, 2.23, 0.02);
+    playerGroup.add(ear);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.082, 10, 10), eyeWhite);
+    eye.position.set(side * 0.14, 2.32, 0.318);
+    playerGroup.add(eye);
+    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.047, 9, 8), eyeDark);
+    pupil.position.set(side * 0.14, 2.31, 0.378);
+    playerGroup.add(pupil);
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.045, 0.06), browMaterial);
+    brow.position.set(side * 0.14, 2.43, 0.33);
+    brow.rotation.z = side * -0.12;
+    playerGroup.add(brow);
+}
+const nose = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 8), new THREE.MeshLambertMaterial({ color: 0xe58e64 }));
+nose.position.set(0, 2.19, 0.39);
+nose.scale.set(1, 0.82, 0.78);
+playerGroup.add(nose);
+const smile = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.035, 0.035), new THREE.MeshLambertMaterial({ color: 0x873f32 }));
+smile.position.set(0, 2.075, 0.355);
+playerGroup.add(smile);
+
+const capMaterial = new THREE.MeshLambertMaterial({ color: 0xc7472f });
+const capCrown = new THREE.Mesh(new THREE.SphereGeometry(0.39, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.58), capMaterial);
+capCrown.position.set(0, 2.52, -0.005);
+playerGroup.add(capCrown);
+const capBand = new THREE.Mesh(new THREE.CylinderGeometry(0.365, 0.365, 0.08, 14), new THREE.MeshLambertMaterial({ color: 0xe6b33d }));
+capBand.position.y = 2.47;
+playerGroup.add(capBand);
+const capBrim = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.075, 0.34), capMaterial);
+capBrim.position.set(0, 2.47, 0.32);
+playerGroup.add(capBrim);
+
+const armMaterial = new THREE.MeshLambertMaterial({ color: 0x1473a5 });
+const trouserMaterial = new THREE.MeshLambertMaterial({ color: 0x40586a });
+const shoeMaterial = new THREE.MeshLambertMaterial({ color: 0x49372b });
+const arms = [];
+const legs = [];
+for (const side of [-1, 1]) {
+    const armPivot = new THREE.Group();
+    armPivot.position.set(side * 0.43, 1.43, 0);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.66, 0.23), armMaterial);
+    arm.position.y = -0.28;
+    arm.castShadow = true;
+    armPivot.add(arm);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.12, 9, 8), new THREE.MeshLambertMaterial({ color: 0xffe0bd }));
+    hand.position.y = -0.62;
+    armPivot.add(hand);
+    playerGroup.add(armPivot);
+    arms.push({ pivot: armPivot, side });
+
+    const legPivot = new THREE.Group();
+    legPivot.position.set(side * 0.18, 0.58, 0);
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.58, 0.27), trouserMaterial);
+    leg.position.y = -0.27;
+    leg.castShadow = true;
+    legPivot.add(leg);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.15, 0.38), shoeMaterial);
+    shoe.position.set(0, -0.53, 0.07);
+    legPivot.add(shoe);
+    playerGroup.add(legPivot);
+    legs.push({ pivot: legPivot, side });
+}
+playerGroup.userData.limbs = { arms, legs };
+
+const bodyPos = new THREE.Vector3(0, 0, 0);
+playerGroup.position.copy(bodyPos);
+scene.add(playerGroup);
+
+function positionPlayerAtFarmEntrance() {
+    if (!gameState.marketRoute) return;
+    playerGroup.position.set(gameState.marketRoute.stallX - 3.5, 0, gameState.marketRoute.z);
+    playerGroup.rotation.y = cameraYaw;
+    camera.position.set(
+        playerGroup.position.x + Math.cos(cameraYaw) * cameraDistance,
+        18,
+        playerGroup.position.z + Math.sin(cameraYaw) * cameraDistance
+    );
+    camera.lookAt(playerGroup.position.x, 1.5, playerGroup.position.z);
+}
+
+const pointer = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+const placementPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0.22);
+const placementPreviewGroup = new THREE.Group();
+const placementPreviewGeometry = new THREE.BoxGeometry(1.5, 0.14, 1.5);
+const placementPreviewValidMaterial = new THREE.MeshLambertMaterial({ color: 0x31c878, transparent: true, opacity: 0.55, depthWrite: false });
+const placementPreviewBlockedMaterial = new THREE.MeshLambertMaterial({ color: 0xe64141, transparent: true, opacity: 0.62, depthWrite: false });
+const placementPreviewMeshes = [];
+let currentPlacementSelection = null;
+placementPreviewGroup.visible = false;
+scene.add(placementPreviewGroup);
+let cameraYaw = Math.PI / 4;
+let cameraDistance = 17;
+let playerHeading = Math.PI / 4;
+let frontCamera = false;
+let placementPreviousCameraDistance = null;
+
+function beginPlacementMode(mode) {
+    if (placementPreviousCameraDistance === null) {
+        placementPreviousCameraDistance = cameraDistance;
+        cameraDistance = Math.max(cameraDistance, 35);
+    }
+    gameState.currentMode = mode;
+}
+
+function finishPlacementMode() {
+    gameState.currentMode = 'normal';
+    if (placementPreviousCameraDistance !== null) {
+        cameraDistance = placementPreviousCameraDistance;
+        placementPreviousCameraDistance = null;
+    }
+}
+
+function syncCanvasPointerState() {
+    canvas.style.pointerEvents = 'auto';
+}
+
+function setPlacementPreview(selection) {
+    if (!selection) {
+        placementPreviewGroup.visible = false;
+        currentPlacementSelection = null;
+        updatePlacementControls();
+        return;
+    }
+
+    currentPlacementSelection = selection;
+    selection.cells.forEach((cell, index) => {
+        if (!placementPreviewMeshes[index]) {
+            const mesh = new THREE.Mesh(placementPreviewGeometry, placementPreviewValidMaterial);
+            mesh.userData.isPlacementPreview = true;
+            placementPreviewGroup.add(mesh);
+            placementPreviewMeshes.push(mesh);
+        }
+        const mesh = placementPreviewMeshes[index];
+        mesh.position.set(cell.x * 1.6, 0.18, cell.z * 1.6);
+        mesh.material = cell.blocked ? placementPreviewBlockedMaterial : placementPreviewValidMaterial;
+        mesh.visible = true;
+    });
+    for (let index = selection.cells.length; index < placementPreviewMeshes.length; index++) {
+        placementPreviewMeshes[index].visible = false;
+    }
+    placementPreviewGroup.visible = true;
+    updatePlacementControls();
+}
+
+function clearPlacementPreview() {
+    placementPreviewGroup.visible = false;
+    currentPlacementSelection = null;
+    updatePlacementControls();
+}
+
+function previewPlacementAtPoint(point) {
+    const side = gameState.currentMode === 'expand' ? 4 : 5;
+    const firstX = Math.round(point.x / 1.6) - Math.floor(side / 2);
+    const firstZ = Math.round(point.z / 1.6) - Math.floor(side / 2);
+    const key = `${gameState.currentMode}:${firstX},${firstZ}`;
+    if (currentPlacementSelection && currentPlacementSelection.key === key) return;
+    const selection = getPlacementSelection(point, gameState.currentMode);
+    setPlacementPreview(selection);
+}
+
+let plantingPointerId = null;
+const draggedPlantTiles = new Set();
+const canvasTouches = new Map();
+let pinchGestureActive = false;
+let pinchStartDistance = 0;
+let pinchStartCameraDistance = cameraDistance;
+
+function processCanvasTap(event) {
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const hologramHits = raycaster.intersectObjects(gameState.farmHolograms, false);
+    const isPlacementMode = ['expand', 'farm-placement'].includes(gameState.currentMode);
+    if (hologramHits.length && !isPlacementMode) {
+        collectFromHologram(hologramHits[0].object.userData.farmType);
+        return;
+    }
+    const harvestHits = raycaster.intersectObjects([...harvestHolograms.values()], false);
+    if (harvestHits.length && !isPlacementMode) {
+        collectHarvestArea(harvestHits[0].object.userData.groupKey);
+        return;
+    }
+    if (isPlacementMode) {
+        const placementPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(placementPlane, placementPoint)) {
+            if (gameState.currentMode === 'expand') expandLandAtPoint(placementPoint);
+            else placeAnimalFarmAtPoint(placementPoint);
+        }
+        return;
+    }
+    const allTiles = [...groundTiles, ...gameState.animalFarmTiles];
+    const hits = raycaster.intersectObjects(allTiles);
+    if (hits.length) handleTileClick(hits[0]);
+}
+
+window.addEventListener('pointerdown', (event) => {
+    if (event.target !== canvas) return;
+    if (event.button !== 0) return;
+    if (event.pointerType === 'touch') {
+        canvasTouches.set(event.pointerId, {
+            x: event.clientX,
+            y: event.clientY,
+            startX: event.clientX,
+            startY: event.clientY,
+            moved: false
+        });
+        if (canvasTouches.size >= 2) {
+            pinchGestureActive = true;
+            plantingPointerId = null;
+            draggedPlantTiles.clear();
+            const [first, second] = [...canvasTouches.values()];
+            pinchStartDistance = Math.hypot(first.x - second.x, first.y - second.y);
+            pinchStartCameraDistance = cameraDistance;
+            event.preventDefault();
+            return;
+        }
+        if (gameState.currentMode === 'plant') {
+            plantingPointerId = event.pointerId;
+            draggedPlantTiles.clear();
+        }
+        return;
+    }
+    if (gameState.currentMode === 'plant') {
+        plantingPointerId = event.pointerId;
+        draggedPlantTiles.clear();
+        canvas.setPointerCapture(event.pointerId);
+    }
+    processCanvasTap(event);
+});
+
+window.addEventListener('pointermove', (event) => {
+    if (event.target !== canvas) return;
+    const touch = canvasTouches.get(event.pointerId);
+    if (touch) {
+        touch.x = event.clientX;
+        touch.y = event.clientY;
+        if (Math.hypot(touch.x - touch.startX, touch.y - touch.startY) > 8) touch.moved = true;
+        if (canvasTouches.size >= 2) {
+            const [first, second] = [...canvasTouches.values()];
+            const distance = Math.hypot(first.x - second.x, first.y - second.y);
+            if (!pinchGestureActive) {
+                pinchGestureActive = true;
+                pinchStartDistance = distance;
+                pinchStartCameraDistance = cameraDistance;
+                plantingPointerId = null;
+                draggedPlantTiles.clear();
+            }
+            if (pinchGestureActive) {
+                if (gameState.currentMode !== 'expand' && gameState.currentMode !== 'farm-placement' && pinchStartDistance > 0) {
+                    cameraDistance = Math.min(28, Math.max(12, pinchStartCameraDistance * pinchStartDistance / distance));
+                }
+                event.preventDefault();
+                return;
+            }
+        } else if (pinchGestureActive) {
+            event.preventDefault();
+            return;
+        }
+    }
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    if (event.pointerId === plantingPointerId && gameState.currentMode === 'plant') {
+        const hits = raycaster.intersectObjects(groundTiles);
+        const tile = getTileFromIntersection(hits[0]);
+        if (tile && !draggedPlantTiles.has(tile.userData.key)) {
+            draggedPlantTiles.add(tile.userData.key);
+            const cropCost = CROP_COSTS[gameState.selectedCrop] || 10;
+            if (!tile.userData.occupied && !tile.userData.building &&
+                gameState.energy >= 5 &&
+                (gameState.seeds[gameState.selectedCrop] > 0 || gameState.coins >= cropCost)) {
+                plantCropOnTile(tile);
+            }
+        }
+        return;
+    }
+    if (['expand', 'farm-placement'].includes(gameState.currentMode)) {
+        const placementPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(placementPlane, placementPoint)) {
+            previewPlacementAtPoint(placementPoint);
+        } else {
+            clearPlacementPreview();
+        }
+        canvas.style.cursor = 'crosshair';
+        return;
+    }
+    clearPlacementPreview();
+    const hits = raycaster.intersectObjects([...gameState.farmHolograms, ...harvestHolograms.values()], false);
+    canvas.style.cursor = hits.length ? 'pointer' : 'default';
+});
+
+window.addEventListener('pointerup', (event) => {
+    if (event.pointerType === 'touch' && canvasTouches.has(event.pointerId)) {
+        const touch = canvasTouches.get(event.pointerId);
+        canvasTouches.delete(event.pointerId);
+        if (pinchGestureActive) {
+            if (canvasTouches.size === 0) {
+                pinchGestureActive = false;
+                pinchStartDistance = 0;
+                plantingPointerId = null;
+                draggedPlantTiles.clear();
+            }
+            return;
+        }
+        if (!touch.moved) processCanvasTap(event);
+    }
+    if (event.pointerId === plantingPointerId) {
+        plantingPointerId = null;
+        draggedPlantTiles.clear();
+    }
+});
+window.addEventListener('pointercancel', (event) => {
+    if (event.pointerType === 'touch' && canvasTouches.has(event.pointerId)) {
+        canvasTouches.delete(event.pointerId);
+        if (canvasTouches.size === 0) {
+            pinchGestureActive = false;
+            pinchStartDistance = 0;
+        }
+    }
+    if (event.pointerId === plantingPointerId || pinchGestureActive) {
+        plantingPointerId = null;
+        draggedPlantTiles.clear();
+    }
+});
+
+window.addEventListener('resize', () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    syncCanvasPointerState();
+});
+
+canvas.addEventListener('wheel', (event) => {
+    if (!(event.target === canvas || canvas.contains(event.target))) return;
+    if (event.target.closest('.crop-menu, .settings-panel, .shop-menu, .build-menu, .side-panel')) return;
+    event.preventDefault();
+    if (gameState.currentMode === 'expand' || gameState.currentMode === 'farm-placement') return;
+    cameraDistance = Math.min(28, Math.max(12, cameraDistance + event.deltaY * 0.008));
+}, { passive: false });
+
+const pressedKeys = new Set();
+let joystickPointerId = null;
+let joystickX = 0;
+let joystickY = 0;
+
+const mobileJoystick = document.getElementById('mobileJoystick');
+const mobileJoystickKnob = document.getElementById('mobileJoystickKnob');
+
+function updateJoystick(event) {
+    if (!mobileJoystick || !mobileJoystickKnob) return;
+    const bounds = mobileJoystick.getBoundingClientRect();
+    const maxTravel = bounds.width * 0.28;
+    const deltaX = event.clientX - (bounds.left + bounds.width / 2);
+    const deltaY = event.clientY - (bounds.top + bounds.height / 2);
+    const distance = Math.hypot(deltaX, deltaY);
+    const scale = distance > maxTravel ? maxTravel / distance : 1;
+    const knobX = deltaX * scale;
+    const knobY = deltaY * scale;
+    joystickX = knobX / maxTravel;
+    joystickY = knobY / maxTravel;
+    mobileJoystickKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+}
+
+function releaseJoystick() {
+    joystickPointerId = null;
+    joystickX = 0;
+    joystickY = 0;
+    if (mobileJoystickKnob) mobileJoystickKnob.style.transform = 'translate(0, 0)';
+}
+
+mobileJoystick?.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    joystickPointerId = event.pointerId;
+    mobileJoystick.setPointerCapture(event.pointerId);
+    updateJoystick(event);
+});
+mobileJoystick?.addEventListener('pointermove', (event) => {
+    if (event.pointerId !== joystickPointerId) return;
+    event.preventDefault();
+    updateJoystick(event);
+});
+mobileJoystick?.addEventListener('pointerup', (event) => {
+    if (event.pointerId === joystickPointerId) releaseJoystick();
+});
+mobileJoystick?.addEventListener('pointercancel', releaseJoystick);
+mobileJoystick?.addEventListener('lostpointercapture', releaseJoystick);
+
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'KeyV' && !event.repeat) {
+        frontCamera = !frontCamera;
+        addNotification(frontCamera ? 'Câmera frontal ativada.' : 'Câmera traseira ativada.', '#10b981');
+        return;
+    }
+    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+        pressedKeys.add(event.code);
+        event.preventDefault();
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    pressedKeys.delete(event.code);
+});
+
+window.addEventListener('blur', () => pressedKeys.clear());
+
+function updateCamera() {
+    cameraYaw += (playerHeading - cameraYaw) * 0.12;
+    const forwardX = Math.sin(playerHeading);
+    const forwardZ = Math.cos(playerHeading);
+    const cameraDir = frontCamera ? 1 : -1;
+    const desiredX = playerGroup.position.x + forwardX * cameraDir * cameraDistance;
+    const desiredZ = playerGroup.position.z + forwardZ * cameraDir * cameraDistance;
+    camera.position.x += (desiredX - camera.position.x) * 0.12;
+    camera.position.z += (desiredZ - camera.position.z) * 0.12;
+    camera.position.y += (18 - camera.position.y) * 0.12;
+    const lookX = playerGroup.position.x + forwardX * (frontCamera ? -8 : 3.5);
+    const lookZ = playerGroup.position.z + forwardZ * (frontCamera ? -8 : 3.5);
+    camera.lookAt(lookX, 1.5, lookZ);
+}
+
+function getPlayerMovementBounds() {
+    const route = gameState.marketRoute;
+    const bounds = {
+        minX: route ? route.startX : -8,
+        maxX: route ? route.endX : 8,
+        minZ: route ? route.z : -8,
+        maxZ: route ? route.z : 8
+    };
+    for (const tile of [...groundTiles, ...gameState.animalFarmTiles]) {
+        bounds.minX = Math.min(bounds.minX, tile.position.x - 0.75);
+        bounds.maxX = Math.max(bounds.maxX, tile.position.x + 0.75);
+        bounds.minZ = Math.min(bounds.minZ, tile.position.z - 0.75);
+        bounds.maxZ = Math.max(bounds.maxZ, tile.position.z + 0.75);
+    }
+    const margin = 5.5;
+    return {
+        minX: bounds.minX - margin,
+        maxX: bounds.maxX + margin,
+        minZ: bounds.minZ - margin,
+        maxZ: bounds.maxZ + margin
+    };
+}
+
+function movePlayer() {
+    const turnDirection = (pressedKeys.has('KeyA') || pressedKeys.has('ArrowLeft') ? 1 : 0)
+        - (pressedKeys.has('KeyD') || pressedKeys.has('ArrowRight') ? 1 : 0);
+    playerHeading += (turnDirection * 0.04) - (joystickX * 0.035);
+
+    const keyboardDirection = (pressedKeys.has('KeyW') || pressedKeys.has('ArrowUp') ? 1 : 0)
+        - (pressedKeys.has('KeyS') || pressedKeys.has('ArrowDown') ? 1 : 0);
+    const direction = keyboardDirection || -joystickY;
+    if (direction !== 0) {
+        const forwardX = Math.sin(playerHeading);
+        const forwardZ = Math.cos(playerHeading);
+        const dx = forwardX * direction * 0.12;
+        const dz = forwardZ * direction * 0.12;
+        const nextX = playerGroup.position.x + dx;
+        const nextZ = playerGroup.position.z + dz;
+        const bounds = getPlayerMovementBounds();
+        if (nextX >= bounds.minX && nextX <= bounds.maxX && nextZ >= bounds.minZ && nextZ <= bounds.maxZ) {
+            playerGroup.position.x = nextX;
+            playerGroup.position.z = nextZ;
+        }
+    }
+
+    playerGroup.rotation.y = playerHeading;
+    cameraYaw = playerHeading;
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    const now = performance.now();
+    updateCropGrowth();
+    updateHarvestHolograms(now);
+    updateFarmHolograms(now);
+    movePlayer();
+    updateCamera();
+    renderer.render(scene, camera);
+}
+
+syncCanvasPointerState();
+buildFarmEnvironment();
+buildGround();
+buildAnimalFarms();
+positionPlayerAtFarmEntrance();
+updateUI();
+updateSoundToggle();
+animate();
+
+async function showActiveAppVersion() {
+    const label = document.getElementById('appVersion');
+    if (!label) return;
+
+    if (!window.Capacitor?.isNativePlatform?.()) {
+        label.textContent = location.protocol === 'file:' ? 'Versão local' : 'Versão web';
+        return;
+    }
+
+    const updater = window.CapgoUpdaterModule?.CapacitorUpdater;
+    if (!updater) {
+        label.textContent = 'Versão nativa';
+        console.error('Capgo updater did not load; app version cannot be read.');
+        return;
+    }
+
+    try {
+        const current = await updater.current();
+        const bundle = current.bundle;
+        const version = bundle.id === 'builtin' ? current.native : bundle.version;
+        label.textContent = `Versão ${version || 'nativa'}`;
+    } catch (error) {
+        label.textContent = 'Versão indisponível';
+        console.error('Could not read the active app version.', error);
+    }
+}
+
+showActiveAppVersion();
+
+if (window.Capacitor?.isNativePlatform?.()) {
+    const updater = window.CapgoUpdaterModule?.CapacitorUpdater;
+    if (!updater) {
+        console.error('Capgo updater did not load in the native app.');
+    } else {
+        updater.notifyAppReady().catch((error) => {
+            console.error('Could not mark the current Capgo bundle as ready.', error);
+        });
+    }
+}
+
+if ('serviceWorker' in navigator && !window.Capacitor?.isNativePlatform?.()) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+            console.error('Could not register the PWA service worker.', error);
+        });
+    });
+}
+</script>
+</body>
+</html>
