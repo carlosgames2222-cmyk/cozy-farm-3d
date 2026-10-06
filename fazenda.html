@@ -48,6 +48,10 @@
         .mission-title { font-weight:bold; color:var(--field-ink); margin-bottom:5px; }
         .mission-progress { margin-top:8px; font-size:.9em; color:#4a5568; }
         .mission-reward { color:#32823b; font-weight:bold; }
+        .completed-missions { margin-top:18px; padding-top:14px; border-top:2px solid #b9c38f; }
+        .completed-missions-title { color:var(--field-forest); font-weight:bold; margin-bottom:10px; }
+        .completed-mission { display:flex; justify-content:space-between; gap:8px; padding:9px 10px; margin-bottom:7px; border-radius:8px; background:#dfe8c7; color:#476342; font-size:.86rem; }
+        .demolition-note { max-width:min(360px, calc(100vw - 28px)); text-align:center; }
         .crop-selector { position:fixed; bottom:95px; left:50%; transform:translateX(-50%); display:block; pointer-events:all; z-index:155; }
         .crop-selector-mobile { display:none; }
         .selected-crop { display:flex; align-items:center; gap:8px; min-width:150px; color:#2d3748; }
@@ -109,7 +113,12 @@
         @keyframes slideIn { from { transform: translateX(-30px); opacity:0; } to { transform: translateX(0); opacity:1; } }
         @media (max-width: 900px), (pointer: coarse) { .crop-selector{display:none;} .crop-selector-mobile { position:fixed; bottom:calc(57px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; justify-content:center; pointer-events:all; z-index:155; }
             .placement-controls { bottom:176px; left:8px; right:8px; transform:none; justify-content:center; flex-wrap:wrap; }
-            .mobile-controls { position:fixed; left:14px; top:50%; z-index:155; display:block; width:clamp(76px, 17vw, 92px); height:clamp(76px, 17vw, 92px); transform:translateY(-50%); pointer-events:all; touch-action:none; }
+            .mobile-controls { position:fixed; left:12px; bottom:calc(68px + env(safe-area-inset-bottom)); top:auto; z-index:155; display:block; width:clamp(92px, 25vw, 122px); height:clamp(92px, 25vw, 122px); transform:none; pointer-events:all; touch-action:none; }
+            .settings-panel, .developer-panel { width:min(280px, calc(100vw - 18px)); max-height:calc(100vh - 80px); overflow-y:auto; }
+            .settings-panel { top:calc(45px + env(safe-area-inset-top)); right:9px; }
+            .developer-panel { top:calc(45px + env(safe-area-inset-top)); left:9px; }
+            .side-panel { font-size:.9rem; }
+            .notification { top:calc(45px + env(safe-area-inset-top)); left:8px; right:8px; max-width:none; }
             .crop-menu-mobile .crop-option { border:2px solid transparent; background:#f3f4f6; }
             .crop-menu-mobile .crop-option.active { border-color:#71945b; background:var(--field-leaf-light); }
             .crop-menu-mobile .crop-option { min-height:44px; padding:7px 9px; font-size:.8rem; }
@@ -187,7 +196,7 @@
             <div class="inventory-item"><span>🌽 Sementes</span> <strong id="seed-corn">0</strong></div>
         </section>
         <section class="side-panel" id="animalsPanel" role="tabpanel" aria-hidden="true"><div class="panel-title" style="margin-top:20px;">🐔 Animais</div><div id="animalsList"></div></section>
-        <section class="side-panel" id="missionsPanel" role="tabpanel" aria-hidden="true"><div class="panel-title" style="margin-top:20px;">🎯 Missões</div><div id="missionsList"></div></section>
+        <section class="side-panel" id="missionsPanel" role="tabpanel" aria-hidden="true"><div class="panel-title" style="margin-top:20px;">🎯 Missões</div><div id="missionsList"></div><div class="completed-missions"><div class="completed-missions-title">✅ Missões completadas</div><div id="completedMissionsList"><div class="completed-mission"><span>Nenhuma missão completada ainda.</span></div></div></div></section>
         <div class="crop-selector" id="cropSelectorDesktop">
             <button class="crop-menu-toggle" id="cropMenuToggle" type="button" onclick="toggleCropMenu()" aria-label="Abrir sementes" aria-expanded="false">🌱</button>
             <div class="crop-menu" id="cropMenuDesktop" aria-label="Sementes disponíveis">
@@ -212,7 +221,7 @@
             <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
             <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
         </div>
-        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.1</div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.2</div>
         <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
             <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
                 <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
@@ -249,13 +258,14 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.0.2';
 const WORLD_GROUND_WIDTH = 240;
 const WORLD_GROUND_DEPTH = 180;
 const ENERGY_CAPACITY = 500;
 const ENERGY_REGEN_PER_SECOND = 5;
 const ENERGY_PLANT_COST = 5;
 const ENERGY_TONIC_AMOUNT = 40;
+const MAX_ANIMALS_PER_FARM = 9;
 const CROP_LABELS = { carrot: 'Cenoura', wheat: 'Trigo', tomato: 'Tomate', corn: 'Milho' };
 const CROP_COSTS = { carrot: 10, wheat: 12, tomato: 18, corn: 15 };
 const CROP_NAMES = { carrot: 'cenoura(s)', wheat: 'trigo(s)', tomato: 'tomate(s)', corn: 'milho(s)' };
@@ -299,6 +309,7 @@ const gameState = {
         pig: { stock: 0, lastAt: Date.now() }
     },
     missions: createInitialMissions(),
+    completedMissions: [],
     animals: [],
     customers: [],
     customerTimer: 4,
@@ -518,7 +529,8 @@ function updateUI() {
         counts[animal.type] = (counts[animal.type] || 0) + 1;
     }
     const missionsSignature = gameState.missions.map((mission) => `${mission.id}:${mission.progress}/${mission.goal}`).join(',');
-    const signature = `${counts.chicken}|${counts.cow}|${counts.pig}|${missionsSignature}`;
+    const completedSignature = gameState.completedMissions.map((mission) => mission.id).join(',');
+    const signature = `${counts.chicken}|${counts.cow}|${counts.pig}|${missionsSignature}|${completedSignature}`;
     if (signature === uiSignature) return;
     uiSignature = signature;
 
@@ -543,6 +555,13 @@ function updateUI() {
                 </div>
             `;
         }).join('');
+    }
+
+    const completedMissionsList = document.getElementById('completedMissionsList');
+    if (completedMissionsList) {
+        completedMissionsList.innerHTML = gameState.completedMissions.length
+            ? gameState.completedMissions.slice().reverse().map((mission) => `<div class="completed-mission"><span>✅ ${mission.title}</span><strong>+💰 ${mission.reward}</strong></div>`).join('')
+            : '<div class="completed-mission"><span>Nenhuma missão completada ainda.</span></div>';
     }
 }
 
@@ -731,6 +750,7 @@ function saveGameSilent() {
             expansionCells: gameState.expansionCells,
             farmProducts: gameState.farmProducts,
             missions: gameState.missions.map((mission) => ({ ...mission })),
+            completedMissions: gameState.completedMissions.map((mission) => ({ ...mission })),
             animals: gameState.animals.map((animal) => ({ type: animal.type, x: animal.x, z: animal.z })),
             buildings: buildables.map((building) => ({
                 x: building.userData.tile.userData.x,
@@ -804,6 +824,7 @@ function loadGame() {
                 ...saved
             }));
         }
+        gameState.completedMissions = Array.isArray(saveData.completedMissions) ? saveData.completedMissions.slice(-20) : [];
         if (typeof saveData.soundMuted === 'boolean') {
             soundMuted = saveData.soundMuted;
             updateSoundToggle();
@@ -1068,6 +1089,10 @@ function buyShopItem(type) {
     if (['chicken', 'cow', 'pig'].includes(type) && !gameState.farms[type]) {
         const farmName = { chicken: 'galinhas', cow: 'vacas', pig: 'porcos' }[type];
         addNotification(`Desbloqueie a fazenda de ${farmName} primeiro.`, '#f59e0b');
+        return;
+    }
+    if (['chicken', 'cow', 'pig'].includes(type) && gameState.animals.filter((animal) => animal.type === type).length >= MAX_ANIMALS_PER_FARM) {
+        addNotification(`Limite atingido: cada fazenda pode ter no máximo ${MAX_ANIMALS_PER_FARM} animais.`, '#f59e0b');
         return;
     }
     if (type === 'fertilizer' && plantedTiles.size === 0) {
@@ -1404,6 +1429,7 @@ function completeMission(missionType, count = 1) {
     mission.progress = Math.min(mission.goal, mission.progress + count);
     if (mission.progress >= mission.goal) {
         gameState.coins += mission.reward;
+        gameState.completedMissions = [...gameState.completedMissions, { ...mission, completedAt: Date.now() }].slice(-20);
         gameState.missions = gameState.missions.filter((item) => item !== mission);
         const nextId = Math.max(0, ...gameState.missions.map((item) => item.id)) + 1;
         const nextMission = createMission(nextId);
@@ -1974,12 +2000,35 @@ function createBuildingMesh(type) {
         roof.castShadow = true;
         group.add(roof);
     } else if (type === 'well') {
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 0.9, 16), new THREE.MeshLambertMaterial({ color: 0x9e9e9e }));
-        base.position.y = 0.45;
-        group.add(base);
-        const water = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.45, 0.25, 16), new THREE.MeshLambertMaterial({ color: 0x3ca6e7, transparent: true, opacity: 0.8 }));
-        water.position.y = 0.9;
+        const stone = new THREE.MeshLambertMaterial({ color: 0x9aa6a1 });
+        const rim = new THREE.MeshLambertMaterial({ color: 0xc9d4cb });
+        const waterMaterial = new THREE.MeshLambertMaterial({ color: 0x39b9ee, transparent: true, opacity: 0.9 });
+        const basin = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.92, 0.32, 16), stone);
+        basin.position.y = 0.16;
+        group.add(basin);
+        const water = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.66, 0.08, 16), waterMaterial);
+        water.position.y = 0.36;
         group.add(water);
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.9, 10), stone);
+        pillar.position.y = 0.7;
+        group.add(pillar);
+        for (const side of [-1, 1]) {
+            const arch = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.35, 0.12), stone);
+            arch.position.set(side * 0.72, 0.75, 0);
+            group.add(arch);
+        }
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(0.92, 0.28, 6), rim);
+        roof.position.y = 1.48;
+        group.add(roof);
+        const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.55, 8), waterMaterial);
+        spout.rotation.z = Math.PI / 2;
+        spout.position.set(0.28, 1.02, 0);
+        group.add(spout);
+        for (const offset of [-0.14, 0, 0.14]) {
+            const drop = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), waterMaterial);
+            drop.position.set(0.56 + offset, 0.86 + Math.abs(offset) * 0.5, 0);
+            group.add(drop);
+        }
     } else if (type === 'coop') {
         const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.0, 1.4), new THREE.MeshLambertMaterial({ color: 0xd5a476 }));
         body.position.y = 0.5;
@@ -1996,12 +2045,25 @@ function createBuildingMesh(type) {
         bar.position.y = 0.4;
         group.add(post1, post2, bar);
     } else if (type === 'tree') {
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 1.3, 10), new THREE.MeshLambertMaterial({ color: 0x7b4b2a }));
+        const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x5b3c27 });
+        const foliageMaterial = new THREE.MeshLambertMaterial({ color: 0x20752a });
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 1.3, 8), trunkMaterial);
         trunk.position.y = 0.65;
+        trunk.castShadow = true;
         group.add(trunk);
-        const leaves = new THREE.Mesh(new THREE.SphereGeometry(0.8, 12, 12), new THREE.MeshLambertMaterial({ color: 0x3e9b4a }));
-        leaves.position.y = 1.5;
-        group.add(leaves);
+        const canopy = [
+            { x: -0.4, z: 0.05, y: 1.9, radius: 0.76, scale: [1.2, 0.95, 1.08] },
+            { x: 0.38, z: -0.12, y: 2.05, radius: 0.78, scale: [1.12, 0.92, 1.08] },
+            { x: 0.02, z: 0.12, y: 2.45, radius: 0.82, scale: [1.15, 0.98, 1.08] },
+            { x: 0.08, z: -0.04, y: 2.92, radius: 0.58, scale: [1.08, 0.95, 1.0] }
+        ];
+        for (const layer of canopy) {
+            const crown = new THREE.Mesh(new THREE.SphereGeometry(layer.radius, 12, 10), foliageMaterial);
+            crown.position.set(layer.x, layer.y, layer.z);
+            crown.scale.set(...layer.scale);
+            crown.castShadow = true;
+            group.add(crown);
+        }
     }
     return group;
 }
@@ -2106,6 +2168,7 @@ function demolishAnimalFarm(type) {
     const costs = { chicken: 100, cow: 160, pig: 130 };
     const farmNames = { chicken: 'fazenda de galinhas', cow: 'fazenda de vacas', pig: 'fazenda de porcos' };
     const refund = Math.floor(costs[type] / 2);
+    addNotification(`Atenção: confirme a demolição de ${farmNames[type]} na caixa de mensagem.`, '#b8322a');
     if (!window.confirm(`Demolir ${farmNames[type]}? Você receberá 💰 ${refund} (metade do valor pago).`)) {
         addNotification('Demolição cancelada.', '#f59e0b');
         return;
@@ -2132,6 +2195,7 @@ function demolishStructure(tile) {
 
     const structureName = { barn: 'celeiro', well: 'poço', coop: 'galinheiro', fence: 'cerca', tree: 'árvore' }[tile.userData.building] || 'construção';
     const refund = Math.floor((tile.userData.buildCost || 0) / 2);
+    addNotification(`Atenção: confirme a demolição de ${structureName} na caixa de mensagem.`, '#b8322a');
     if (!window.confirm(`Demolir ${structureName}? Você receberá 💰 ${refund} (metade do valor pago).`)) {
         addNotification('Demolição cancelada.', '#f59e0b');
         return;
@@ -2888,7 +2952,7 @@ let placementPreviousCameraDistance = null;
 function beginPlacementMode(mode) {
     if (placementPreviousCameraDistance === null) {
         placementPreviousCameraDistance = cameraDistance;
-        cameraDistance = Math.max(cameraDistance, 35);
+        cameraDistance = Math.max(cameraDistance, 24);
     }
     gameState.currentMode = mode;
     syncConstructionEditor();
@@ -3220,6 +3284,20 @@ mobileJoystick?.addEventListener('pointercancel', releaseJoystick);
 mobileJoystick?.addEventListener('lostpointercapture', releaseJoystick);
 
 document.addEventListener('keydown', (event) => {
+    if (event.code === 'Escape') {
+        closeSettings();
+        closeDeveloperPanel();
+        closeSidePanels();
+        document.getElementById('shopMenu')?.classList.remove('active');
+        document.getElementById('buildMenu')?.classList.remove('active');
+        toggleCropMenu(false);
+        if (['expand', 'farm-placement'].includes(gameState.currentMode)) cancelPlacement();
+        if (gameState.currentMode === 'demolish') {
+            gameState.currentMode = 'normal';
+            syncConstructionEditor();
+        }
+        return;
+    }
     if (event.code === 'KeyV' && !event.repeat) {
         frontCamera = !frontCamera;
         addNotification(frontCamera ? 'Câmera frontal ativada.' : 'Câmera traseira ativada.', '#10b981');
@@ -3253,12 +3331,11 @@ function updateCamera() {
 }
 
 function getPlayerMovementBounds() {
-    const route = gameState.marketRoute;
     const bounds = {
-        minX: route ? route.startX : -8,
-        maxX: route ? route.endX : 8,
-        minZ: route ? route.z : -8,
-        maxZ: route ? route.z : 8
+        minX: -WORLD_GROUND_WIDTH / 2 + 2,
+        maxX: WORLD_GROUND_WIDTH / 2 - 2,
+        minZ: -WORLD_GROUND_DEPTH / 2 + 2,
+        maxZ: WORLD_GROUND_DEPTH / 2 - 2
     };
     for (const tile of [...groundTiles, ...gameState.animalFarmTiles]) {
         bounds.minX = Math.min(bounds.minX, tile.position.x - 0.75);
@@ -3266,13 +3343,7 @@ function getPlayerMovementBounds() {
         bounds.minZ = Math.min(bounds.minZ, tile.position.z - 0.75);
         bounds.maxZ = Math.max(bounds.maxZ, tile.position.z + 0.75);
     }
-    const margin = 5.5;
-    return {
-        minX: bounds.minX - margin,
-        maxX: bounds.maxX + margin,
-        minZ: bounds.minZ - margin,
-        maxZ: bounds.maxZ + margin
-    };
+    return bounds;
 }
 
 function movePlayer() {
