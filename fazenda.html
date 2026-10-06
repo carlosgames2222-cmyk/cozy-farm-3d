@@ -18,17 +18,17 @@
         #gameCanvas { display:block; width:100vw; height:100vh; touch-action:none; }
         .ui-overlay { position:fixed; inset:0; pointer-events:none; z-index:100; }
         .top-bar { display:flex; justify-content:center; gap:12px; padding:18px; pointer-events:all; }
-        .resource-box { background:rgba(43,60,43,.92); border:1px solid rgba(244,239,220,.32); color:var(--field-paper); padding:10px 17px; border-radius:14px; display:flex; align-items:center; gap:10px; font-weight:bold; font-size:1.2em; box-shadow:0 5px 14px var(--field-shadow); }
-        .resource-icon { font-size:1.5em; }
+        .resource-box { background:rgba(43,60,43,.92); border:1px solid rgba(244,239,220,.32); color:var(--field-paper); padding:7px 12px; border-radius:12px; display:flex; align-items:center; gap:7px; font-weight:bold; font-size:1rem; box-shadow:0 5px 14px var(--field-shadow); }
+        .resource-icon { font-size:1.2em; }
         .resource-value { color:#fff9e9; }
         .settings-btn, .mobile-landscape-btn, .side-tab-btn, .crop-menu-toggle, .direction-button, .action-btn, .crop-buy-btn, .crop-plant-btn, .shop-option, .build-option { pointer-events:all; }
         .settings-btn { position:fixed; top:20px; right:20px; z-index:150; width:48px; height:48px; display:grid; place-items:center; border:1px solid var(--field-paper-edge); border-radius:50%; background:var(--field-paper); color:var(--field-forest); box-shadow:0 5px 14px var(--field-shadow); font-size:1.4rem; cursor:pointer; }
         #developerToggle { right: 82px; border-radius: 14px; }
         .mobile-landscape-btn { position:fixed; top:20px; left:76px; z-index:150; width:48px; height:48px; border:1px solid var(--field-paper-edge); border-radius:14px; background:var(--field-paper); color:var(--field-forest); box-shadow:0 5px 14px var(--field-shadow); font-size:1.35rem; cursor:pointer; }
         .settings-panel, .developer-panel, .side-panel, .shop-menu, .build-menu, .crop-menu { position:fixed; background:rgba(244,239,220,.97); border:1px solid var(--field-paper-edge); border-radius:14px; box-shadow:0 10px 26px var(--field-shadow); pointer-events:all; }
-        .settings-panel { top:80px; right:20px; padding:14px; display:none; min-width:220px; z-index:180; }
+        .settings-panel { top:80px; right:20px; padding:9px; display:none; width:190px; min-width:0; z-index:180; }
         .settings-panel.active { display:block; }
-        .settings-btn-action { width:100%; background:#e4ead8; color:var(--field-forest); border:1px solid #c8d4b8; border-radius:9px; padding:10px 12px; margin-top:8px; font-weight:bold; cursor:pointer; }
+        .settings-btn-action { width:100%; background:#e4ead8; color:var(--field-forest); border:1px solid #c8d4b8; border-radius:7px; padding:7px 9px; margin-top:5px; font-size:.86rem; font-weight:bold; cursor:pointer; }
         .developer-panel { top:80px; left:20px; z-index:180; display:none; width:min(250px, calc(100vw - 32px)); padding:14px; }
         .developer-panel.active { display:block; }
         .developer-title { color:var(--field-forest); font-weight:bold; }
@@ -52,6 +52,16 @@
         .completed-missions-title { color:var(--field-forest); font-weight:bold; margin-bottom:10px; }
         .completed-mission { display:flex; justify-content:space-between; gap:8px; padding:9px 10px; margin-bottom:7px; border-radius:8px; background:#dfe8c7; color:#476342; font-size:.86rem; }
         .demolition-note { max-width:min(360px, calc(100vw - 28px)); text-align:center; }
+        .confirm-dialog-backdrop { position:fixed; inset:0; z-index:260; display:none; place-items:center; padding:18px; background:rgba(18,31,20,.46); pointer-events:all; }
+        .confirm-dialog-backdrop.active { display:grid; }
+        .confirm-dialog-backdrop.active ~ .ui-overlay { pointer-events:none; }
+        .confirm-dialog { width:min(360px, 100%); padding:18px; border:1px solid var(--field-paper-edge); border-radius:16px; background:var(--field-paper); color:var(--field-ink); box-shadow:0 14px 36px rgba(0,0,0,.34); text-align:center; }
+        .confirm-dialog-title { margin-bottom:8px; color:var(--field-forest); font-size:1.1rem; font-weight:bold; }
+        .confirm-dialog-message { margin:0; line-height:1.4; }
+        .confirm-dialog-actions { display:flex; justify-content:center; gap:8px; margin-top:16px; }
+        .confirm-dialog-actions button { min-width:110px; padding:10px 12px; border:0; border-radius:9px; font:inherit; font-weight:bold; cursor:pointer; }
+        .confirm-dialog-confirm { background:#b8322a; color:white; }
+        .confirm-dialog-cancel { background:#dfe8c7; color:var(--field-ink); }
         .crop-selector { position:fixed; bottom:95px; left:50%; transform:translateX(-50%); display:block; pointer-events:all; z-index:155; }
         .crop-selector-mobile { display:none; }
         .selected-crop { display:flex; align-items:center; gap:8px; min-width:150px; color:#2d3748; }
@@ -114,7 +124,8 @@
         @media (max-width: 900px), (pointer: coarse) { .crop-selector{display:none;} .crop-selector-mobile { position:fixed; bottom:calc(57px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; justify-content:center; pointer-events:all; z-index:155; }
             .placement-controls { bottom:176px; left:8px; right:8px; transform:none; justify-content:center; flex-wrap:wrap; }
             .mobile-controls { position:fixed; left:12px; bottom:calc(68px + env(safe-area-inset-bottom)); top:auto; z-index:155; display:block; width:clamp(92px, 25vw, 122px); height:clamp(92px, 25vw, 122px); transform:none; pointer-events:all; touch-action:none; }
-            .settings-panel, .developer-panel { width:min(280px, calc(100vw - 18px)); max-height:calc(100vh - 80px); overflow-y:auto; }
+            .settings-panel, .developer-panel { width:min(220px, calc(100vw - 18px)); max-height:calc(100vh - 80px); overflow-y:auto; }
+            .resource-box { flex:0 1 auto; min-width:70px; width:auto; padding:4px 8px; font-size:.78em; }
             .settings-panel { top:calc(45px + env(safe-area-inset-top)); right:9px; }
             .developer-panel { top:calc(45px + env(safe-area-inset-top)); left:9px; }
             .side-panel { font-size:.9rem; }
@@ -126,8 +137,8 @@
             .crop-selector-mobile .crop-menu-toggle { width:auto; min-width:118px; height:36px; padding:0 12px; border:1px solid rgba(255,255,255,.45); border-radius:11px; background:#216e38; color:#fff; box-shadow:0 3px 9px var(--field-shadow); font-size:.82rem; font-weight:700; }
             .crop-selector-mobile .crop-menu-toggle:active { background:#4b9b38; }
             .shop-options { grid-template-columns:repeat(2,minmax(90px,1fr)); }
-            .top-bar { justify-content:flex-start; gap:3px; padding:calc(6px + env(safe-area-inset-top)) 82px 4px 5px; }
-            .resource-box { flex:1 1 0; min-width:0; justify-content:center; gap:2px; padding:4px 3px; border-radius:9px; font-size:.68em; }
+            .top-bar { justify-content:center; gap:4px; padding:calc(6px + env(safe-area-inset-top)) 48px 4px 5px; }
+            .resource-box { flex:0 1 auto; min-width:70px; width:auto; justify-content:center; gap:3px; padding:4px 8px; border-radius:9px; font-size:.78em; }
             .resource-icon { font-size:1em; }
             .settings-btn { top:calc(6px + env(safe-area-inset-top)); right:5px; width:32px; height:32px; font-size:1rem; }
             #developerToggle { right:42px; }
@@ -221,7 +232,7 @@
             <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
             <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
         </div>
-        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.2</div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.4</div>
         <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
             <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
                 <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
@@ -237,6 +248,13 @@
             <button class="construction-editor-cancel" type="button" onclick="cancelConstructionMode()">Cancelar</button>
         </div>
         <button class="demolish-cancel" id="demolishCancel" type="button" onclick="cancelDemolishMode()" aria-label="Sair do modo demolição" title="Sair do modo demolição">🚜</button>
+        <div class="confirm-dialog-backdrop" id="confirmDialog" aria-hidden="true">
+            <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
+                <div class="confirm-dialog-title" id="confirmDialogTitle">Confirmar ação</div>
+                <p class="confirm-dialog-message" id="confirmDialogMessage"></p>
+                <div class="confirm-dialog-actions"><button class="confirm-dialog-cancel" type="button" onclick="cancelConfirmDialog()">Cancelar</button><button class="confirm-dialog-confirm" type="button" onclick="confirmDialogAction()">Demolir</button></div>
+            </div>
+        </div>
         <div class="shop-menu" id="shopMenu">
             <div class="panel-title">🛒 Loja</div>
             <div class="shop-options">
@@ -258,7 +276,7 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.0.4';
 const WORLD_GROUND_WIDTH = 240;
 const WORLD_GROUND_DEPTH = 180;
 const ENERGY_CAPACITY = 500;
@@ -853,7 +871,7 @@ function loadGame() {
             tile.userData.buildCost = data.cost || 0;
             tile.userData.occupied = true;
             const group = createBuildingMesh(data.type);
-            group.position.set(tile.position.x, 0.1, tile.position.z);
+            group.position.set(tile.position.x, tile.userData.isBuildingAnchor ? -0.03 : 0.1, tile.position.z);
             group.userData = { tile, type: data.type, cost: data.cost || 0 };
             scene.add(group);
             buildables.push(group);
@@ -1000,9 +1018,31 @@ function spawnAnimal(type, x, z, purchased = false) {
     animal.position.set(x, 0, z);
     animal.userData = { animalType: type, purchased };
     scene.add(animal);
-    const record = { type, x, z, mesh: animal };
+    const record = { type, x, z, mesh: animal, targetX: x, targetZ: z, nextMoveAt: 0 };
     gameState.animals.push(record);
     return record;
+}
+
+function updateAnimalMovement(now, deltaSeconds) {
+    for (const animal of gameState.animals) {
+        const center = gameState.farmCenters[animal.type];
+        if (!center) continue;
+        if (now >= animal.nextMoveAt || Math.hypot(animal.targetX - animal.x, animal.targetZ - animal.z) < 0.08) {
+            animal.targetX = center.x + (Math.random() * 5.2 - 2.6);
+            animal.targetZ = center.z + (Math.random() * 5.2 - 2.6);
+            animal.nextMoveAt = now + 1800 + Math.random() * 3600;
+        }
+        const dx = animal.targetX - animal.x;
+        const dz = animal.targetZ - animal.z;
+        const distance = Math.hypot(dx, dz);
+        if (distance > 0.08) {
+            const step = Math.min(distance, deltaSeconds * 0.7);
+            animal.x += (dx / distance) * step;
+            animal.z += (dz / distance) * step;
+            animal.mesh.position.set(animal.x, 0, animal.z);
+            animal.mesh.rotation.y = Math.atan2(dx, dz);
+        }
+    }
 }
 
 function collectEggs() {
@@ -2092,7 +2132,13 @@ function buildStructureOnTile(tile, type) {
     tile.userData.occupied = true;
 
     const group = createBuildingMesh(type);
-    group.position.set(tile.position.x, 0.1, tile.position.z);
+    if (tile.userData.isBuildingAnchor) {
+        const foundation = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.14, 1.5), new THREE.MeshLambertMaterial({ color: 0x6f9d4b }));
+        foundation.position.y = -0.08;
+        foundation.receiveShadow = true;
+        group.add(foundation);
+    }
+    group.position.set(tile.position.x, tile.userData.isBuildingAnchor ? -0.03 : 0.1, tile.position.z);
     group.userData = { tile, type, cost: amount };
     scene.add(group);
     buildables.push(group);
@@ -2164,27 +2210,50 @@ function placeBuildingAtPoint(point, type) {
     buildStructureOnTile(tile, type);
 }
 
+let pendingConfirmAction = null;
+
+function showConfirmDialog(message, onConfirm) {
+    const dialog = document.getElementById('confirmDialog');
+    const messageEl = document.getElementById('confirmDialogMessage');
+    if (!dialog || !messageEl) return;
+    pendingConfirmAction = onConfirm;
+    messageEl.textContent = message;
+    dialog.classList.add('active');
+    dialog.setAttribute('aria-hidden', 'false');
+}
+
+function confirmDialogAction() {
+    const action = pendingConfirmAction;
+    cancelConfirmDialog();
+    if (action) action();
+}
+
+function cancelConfirmDialog() {
+    const dialog = document.getElementById('confirmDialog');
+    pendingConfirmAction = null;
+    if (dialog) {
+        dialog.classList.remove('active');
+        dialog.setAttribute('aria-hidden', 'true');
+    }
+}
+
 function demolishAnimalFarm(type) {
     const costs = { chicken: 100, cow: 160, pig: 130 };
     const farmNames = { chicken: 'fazenda de galinhas', cow: 'fazenda de vacas', pig: 'fazenda de porcos' };
     const refund = Math.floor(costs[type] / 2);
-    addNotification(`Atenção: confirme a demolição de ${farmNames[type]} na caixa de mensagem.`, '#b8322a');
-    if (!window.confirm(`Demolir ${farmNames[type]}? Você receberá 💰 ${refund} (metade do valor pago).`)) {
-        addNotification('Demolição cancelada.', '#f59e0b');
-        return;
-    }
-
-    for (const animal of gameState.animals.filter((item) => item.type === type)) scene.remove(animal.mesh);
-    gameState.animals = gameState.animals.filter((animal) => animal.type !== type);
-    gameState.farms[type] = false;
-    gameState.farmOrder = gameState.farmOrder.filter((farmType) => farmType !== type);
-    delete gameState.farmLocations[type];
-    if (gameState.farmProducts[type]) gameState.farmProducts[type] = { stock: 0, lastAt: Date.now() };
-    gameState.coins += refund;
-    buildAnimalFarms();
-    updateUI();
-    playSound('coin');
-    addNotification(`${farmNames[type]} demolida. Reembolso: 💰 ${refund}.`, '#10b981');
+    showConfirmDialog(`Demolir ${farmNames[type]}? Você receberá 💰 ${refund} (metade do valor pago).`, () => {
+        for (const animal of gameState.animals.filter((item) => item.type === type)) scene.remove(animal.mesh);
+        gameState.animals = gameState.animals.filter((animal) => animal.type !== type);
+        gameState.farms[type] = false;
+        gameState.farmOrder = gameState.farmOrder.filter((farmType) => farmType !== type);
+        delete gameState.farmLocations[type];
+        if (gameState.farmProducts[type]) gameState.farmProducts[type] = { stock: 0, lastAt: Date.now() };
+        gameState.coins += refund;
+        buildAnimalFarms();
+        updateUI();
+        playSound('coin');
+        addNotification(`${farmNames[type]} demolida. Reembolso: 💰 ${refund}.`, '#10b981');
+    });
 }
 
 function demolishStructure(tile) {
@@ -2195,26 +2264,22 @@ function demolishStructure(tile) {
 
     const structureName = { barn: 'celeiro', well: 'poço', coop: 'galinheiro', fence: 'cerca', tree: 'árvore' }[tile.userData.building] || 'construção';
     const refund = Math.floor((tile.userData.buildCost || 0) / 2);
-    addNotification(`Atenção: confirme a demolição de ${structureName} na caixa de mensagem.`, '#b8322a');
-    if (!window.confirm(`Demolir ${structureName}? Você receberá 💰 ${refund} (metade do valor pago).`)) {
-        addNotification('Demolição cancelada.', '#f59e0b');
-        return;
-    }
-
-    const buildableIndex = buildables.findIndex((object) => object.userData.tile === tile);
-    if (buildableIndex !== -1) {
-        const [object] = buildables.splice(buildableIndex, 1);
-        scene.remove(object);
-    }
-    tile.userData.building = null;
-    tile.userData.buildCost = 0;
-    tile.userData.occupied = false;
-    if (tile.userData.isBuildingAnchor) buildingAnchorTiles.delete(tile.userData.key);
-    gameState.coins += refund;
-    invalidateEnvironmentBlockers();
-    playSound('coin');
-    addNotification(`${structureName} demolido. Reembolso: 💰 ${refund}.`, '#10b981');
-    updateUI();
+    showConfirmDialog(`Demolir ${structureName}? Você receberá 💰 ${refund} (metade do valor pago).`, () => {
+        const buildableIndex = buildables.findIndex((object) => object.userData.tile === tile);
+        if (buildableIndex !== -1) {
+            const [object] = buildables.splice(buildableIndex, 1);
+            scene.remove(object);
+        }
+        tile.userData.building = null;
+        tile.userData.buildCost = 0;
+        tile.userData.occupied = false;
+        if (tile.userData.isBuildingAnchor) buildingAnchorTiles.delete(tile.userData.key);
+        gameState.coins += refund;
+        invalidateEnvironmentBlockers();
+        playSound('coin');
+        addNotification(`${structureName} demolido. Reembolso: 💰 ${refund}.`, '#10b981');
+        updateUI();
+    });
 }
 
 function cancelDemolishMode() {
@@ -3285,6 +3350,7 @@ mobileJoystick?.addEventListener('lostpointercapture', releaseJoystick);
 
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Escape') {
+        cancelConfirmDialog();
         closeSettings();
         closeDeveloperPanel();
         closeSidePanels();
@@ -3381,6 +3447,7 @@ function animate() {
     gameState.energy = Math.min(ENERGY_CAPACITY, gameState.energy + elapsedSeconds * ENERGY_REGEN_PER_SECOND);
     if (Math.floor(gameState.energy) !== previousEnergy) updateUI();
     updateCropGrowth();
+    updateAnimalMovement(now, elapsedSeconds);
     updateHarvestHolograms(now);
     updateFarmHolograms(now);
     movePlayer();
