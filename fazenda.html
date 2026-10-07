@@ -22,11 +22,11 @@
         .resource-icon { font-size:1.2em; }
         .resource-value { color:#fff9e9; }
         .settings-btn, .mobile-landscape-btn, .side-tab-btn, .crop-menu-toggle, .direction-button, .action-btn, .crop-buy-btn, .crop-plant-btn, .shop-option, .build-option { pointer-events:all; }
-        .settings-btn { position:fixed; top:20px; right:20px; z-index:150; width:48px; height:48px; display:grid; place-items:center; border:1px solid var(--field-paper-edge); border-radius:50%; background:var(--field-paper); color:var(--field-forest); box-shadow:0 5px 14px var(--field-shadow); font-size:1.4rem; cursor:pointer; }
+        .settings-btn { position:fixed; top:58px; right:20px; z-index:150; width:48px; height:48px; display:grid; place-items:center; border:1px solid var(--field-paper-edge); border-radius:50%; background:var(--field-paper); color:var(--field-forest); box-shadow:0 5px 14px var(--field-shadow); font-size:1.4rem; cursor:pointer; }
         #developerToggle { right: 82px; border-radius: 14px; }
         .mobile-landscape-btn { position:fixed; top:20px; left:76px; z-index:150; width:48px; height:48px; border:1px solid var(--field-paper-edge); border-radius:14px; background:var(--field-paper); color:var(--field-forest); box-shadow:0 5px 14px var(--field-shadow); font-size:1.35rem; cursor:pointer; }
         .settings-panel, .developer-panel, .side-panel, .shop-menu, .build-menu, .crop-menu { position:fixed; background:rgba(244,239,220,.97); border:1px solid var(--field-paper-edge); border-radius:14px; box-shadow:0 10px 26px var(--field-shadow); pointer-events:all; }
-        .settings-panel { top:80px; right:20px; padding:9px; display:none; width:190px; min-width:0; z-index:180; }
+        .settings-panel { top:116px; right:20px; padding:9px; display:none; width:190px; min-width:0; z-index:180; }
         .settings-panel.active { display:block; }
         .settings-btn-action { width:100%; background:#e4ead8; color:var(--field-forest); border:1px solid #c8d4b8; border-radius:7px; padding:7px 9px; margin-top:5px; font-size:.86rem; font-weight:bold; cursor:pointer; }
         .developer-panel { top:80px; left:20px; z-index:180; display:none; width:min(250px, calc(100vw - 32px)); padding:14px; }
@@ -36,10 +36,10 @@
         .developer-form input { width:100%; margin-top:4px; padding:9px 10px; border:1px solid var(--field-paper-edge); border-radius:7px; background:#fffdf5; color:var(--field-ink); font:inherit; }
         .developer-status { min-height:1.2em; margin-top:8px; color:#8f352b; font-size:.82rem; }
         .settings-tip { margin-top:12px; padding:10px 12px; border-radius:10px; background:#e8edcc; color:#2c4e2d; font-size:.85rem; line-height:1.45; }
-        .side-tabs { position:fixed; right:20px; top:100px; display:flex; flex-direction:column; gap:8px; pointer-events:all; z-index:190; }
+        .side-tabs { position:fixed; right:20px; top:154px; display:flex; flex-direction:column; gap:8px; pointer-events:all; z-index:190; }
         .side-tab-btn { width:46px; height:46px; border:1px solid var(--field-paper-edge); border-radius:12px; background:var(--field-paper); color:var(--field-forest); box-shadow:0 4px 12px var(--field-shadow); font-size:1.25rem; cursor:pointer; }
         .side-tab-btn.active { background:#d5ed83; outline:2px solid #4c9136; }
-        .side-panel { right:78px; top:100px; width:280px; padding:16px; max-height:calc(100vh - 140px); overflow-y:auto; display:none; z-index:165; }
+        .side-panel { right:78px; top:154px; width:280px; padding:16px; max-height:calc(100vh - 190px); overflow-y:auto; display:none; z-index:165; }
         .side-panel.active { display:block; }
         .panel-title { font-size:1.3em; font-weight:bold; color:var(--field-ink); margin-bottom:15px; padding-bottom:10px; border-bottom:2px solid #8b9a67; }
         .inventory-item { display:flex; justify-content:space-between; align-items:center; padding:12px; background:#e7eccb; border:1px solid rgba(105,133,59,.24); border-radius:9px; margin-bottom:8px; font-weight:600; }
@@ -127,8 +127,8 @@
             .mobile-controls { position:fixed; left:12px; bottom:calc(68px + env(safe-area-inset-bottom)); top:auto; z-index:155; display:block; width:clamp(92px, 25vw, 122px); height:clamp(92px, 25vw, 122px); transform:none; pointer-events:all; touch-action:none; }
             .settings-panel, .developer-panel { width:min(220px, calc(100vw - 18px)); max-height:calc(100vh - 80px); overflow-y:auto; }
             .resource-box { flex:0 1 auto; min-width:70px; width:auto; padding:4px 8px; font-size:.78em; }
-            .settings-panel { top:calc(45px + env(safe-area-inset-top)); right:9px; }
-            .developer-panel { top:calc(45px + env(safe-area-inset-top)); left:9px; }
+            .settings-panel { top:calc(98px + env(safe-area-inset-top)); right:9px; }
+            .developer-panel { top:calc(98px + env(safe-area-inset-top)); left:9px; }
             .side-panel { font-size:.9rem; }
             .notification { top:calc(45px + env(safe-area-inset-top)); left:8px; right:8px; max-width:none; }
             .crop-menu-mobile .crop-option { border:2px solid transparent; background:#f3f4f6; }
@@ -141,13 +141,12 @@
             .top-bar { justify-content:center; gap:4px; padding:calc(6px + env(safe-area-inset-top)) 48px 4px 5px; }
             .resource-box { flex:0 1 auto; min-width:70px; width:auto; justify-content:center; gap:3px; padding:4px 8px; border-radius:9px; font-size:.78em; }
             .resource-icon { font-size:1em; }
-            .settings-btn { top:calc(6px + env(safe-area-inset-top)); right:5px; width:32px; height:32px; font-size:1rem; }
-            #developerToggle { right:42px; }
+            .settings-btn { top:calc(58px + env(safe-area-inset-top)); right:5px; width:32px; height:32px; font-size:1rem; }
+            #developerToggle { right:42px; top:calc(58px + env(safe-area-inset-top)); }
             .bottom-bar { bottom:calc(4px + env(safe-area-inset-bottom)); width:auto; max-width:calc(100vw - 12px); flex-wrap:nowrap; justify-content:center; gap:4px; }
             .bottom-bar .action-btn { min-width:78px; min-height:29px; flex:0 1 auto; justify-content:center; padding:4px 8px; border-radius:8px; font-size:.58rem; gap:2px; box-shadow:0 2px 6px var(--field-shadow); }
-            .side-tabs { top:calc(52px + env(safe-area-inset-top)); right:5px; gap:4px; }
-            .side-tab-btn { width:32px; height:32px; border-radius:9px; font-size:1rem; }
-            .side-panel { top:calc(52px + env(safe-area-inset-top)); right:42px; width:min(250px, calc(100vw - 54px)); max-height:calc(100vh - 66px); padding:9px; }
+            .side-tabs { top:calc(96px + env(safe-area-inset-top)); right:5px; gap:4px; }
+            .side-panel { top:calc(96px + env(safe-area-inset-top)); right:42px; width:min(250px, calc(100vw - 54px)); max-height:calc(100vh - 110px); padding:9px; }
             .app-version { right:4px; bottom:calc(1px + env(safe-area-inset-bottom)); font-size:.52rem; }
         }
     </style>
@@ -233,7 +232,7 @@
             <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
             <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
         </div>
-        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.6</div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.7</div>
         <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
             <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
                 <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
@@ -277,7 +276,7 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-const APP_VERSION = '1.0.6';
+const APP_VERSION = '1.0.7';
 const WORLD_GROUND_WIDTH = 240;
 const WORLD_GROUND_DEPTH = 180;
 const ENERGY_CAPACITY = 500;
@@ -2999,13 +2998,14 @@ scene.add(playerGroup);
 function positionPlayerAtFarmEntrance() {
     if (!gameState.marketRoute) return;
     playerGroup.position.set(gameState.marketRoute.stallX - 3.5, 0, gameState.marketRoute.z);
-    playerGroup.rotation.y = cameraYaw;
+    playerGroup.rotation.y = playerHeading;
+    const horizontalDistance = Math.cos(FIXED_CAMERA_PITCH) * cameraDistance;
     camera.position.set(
-        playerGroup.position.x + Math.cos(cameraYaw) * cameraDistance,
-        18,
-        playerGroup.position.z + Math.sin(cameraYaw) * cameraDistance
+        playerGroup.position.x + Math.sin(FIXED_CAMERA_YAW) * horizontalDistance,
+        playerGroup.position.y + 1.5 + Math.sin(FIXED_CAMERA_PITCH) * cameraDistance,
+        playerGroup.position.z + Math.cos(FIXED_CAMERA_YAW) * horizontalDistance
     );
-    camera.lookAt(playerGroup.position.x, 1.5, playerGroup.position.z);
+    camera.lookAt(playerGroup.position.x, 1.2, playerGroup.position.z);
 }
 
 const pointer = new THREE.Vector2();
@@ -3019,7 +3019,9 @@ const placementPreviewMeshes = [];
 let currentPlacementSelection = null;
 placementPreviewGroup.visible = false;
 scene.add(placementPreviewGroup);
-let cameraYaw = Math.PI / 4;
+const FIXED_CAMERA_YAW = Math.PI / 4;
+const FIXED_CAMERA_PITCH = THREE.MathUtils.degToRad(35);
+let cameraYaw = FIXED_CAMERA_YAW;
 let cameraDistance = 17;
 let playerHeading = Math.PI / 4;
 let frontCamera = false;
@@ -3376,8 +3378,7 @@ document.addEventListener('keydown', (event) => {
         return;
     }
     if (event.code === 'KeyV' && !event.repeat) {
-        frontCamera = !frontCamera;
-        addNotification(frontCamera ? 'Câmera frontal ativada.' : 'Câmera traseira ativada.', '#10b981');
+        addNotification('A câmera está fixa em 35°; use o zoom para aproximar ou afastar.', '#10b981');
         return;
     }
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
@@ -3393,18 +3394,14 @@ document.addEventListener('keyup', (event) => {
 window.addEventListener('blur', () => pressedKeys.clear());
 
 function updateCamera() {
-    cameraYaw += (playerHeading - cameraYaw) * 0.12;
-    const forwardX = Math.sin(playerHeading);
-    const forwardZ = Math.cos(playerHeading);
-    const cameraDir = frontCamera ? 1 : -1;
-    const desiredX = playerGroup.position.x + forwardX * cameraDir * cameraDistance;
-    const desiredZ = playerGroup.position.z + forwardZ * cameraDir * cameraDistance;
+    const horizontalDistance = Math.cos(FIXED_CAMERA_PITCH) * cameraDistance;
+    const desiredX = playerGroup.position.x + Math.sin(FIXED_CAMERA_YAW) * horizontalDistance;
+    const desiredZ = playerGroup.position.z + Math.cos(FIXED_CAMERA_YAW) * horizontalDistance;
+    const desiredY = playerGroup.position.y + 1.5 + Math.sin(FIXED_CAMERA_PITCH) * cameraDistance;
     camera.position.x += (desiredX - camera.position.x) * 0.12;
+    camera.position.y += (desiredY - camera.position.y) * 0.12;
     camera.position.z += (desiredZ - camera.position.z) * 0.12;
-    camera.position.y += (18 - camera.position.y) * 0.12;
-    const lookX = playerGroup.position.x + forwardX * (frontCamera ? -8 : 3.5);
-    const lookZ = playerGroup.position.z + forwardZ * (frontCamera ? -8 : 3.5);
-    camera.lookAt(lookX, 1.5, lookZ);
+    camera.lookAt(playerGroup.position.x, 1.2, playerGroup.position.z);
 }
 
 function getPlayerMovementBounds() {
@@ -3446,7 +3443,6 @@ function movePlayer() {
     }
 
     playerGroup.rotation.y = playerHeading;
-    cameraYaw = playerHeading;
 }
 
 function animate() {
