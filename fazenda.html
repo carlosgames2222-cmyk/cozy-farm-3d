@@ -265,7 +265,7 @@
             <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
             <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
         </div>
-        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.9</div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.10</div>
         <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
             <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
                 <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
@@ -309,7 +309,7 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-const APP_VERSION = '1.0.9';
+const APP_VERSION = '1.0.10';
 const WORLD_GROUND_WIDTH = 240;
 const WORLD_GROUND_DEPTH = 180;
 const ENERGY_CAPACITY = 500;
@@ -403,14 +403,24 @@ function getAccounts() {
 
 function createSalt() {
     const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
+    if (globalThis.crypto?.getRandomValues) globalThis.crypto.getRandomValues(bytes);
+    else for (let index = 0; index < bytes.length; index++) bytes[index] = Math.floor(Math.random() * 256);
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 async function hashPassword(password, salt) {
-    const data = new TextEncoder().encode(`${salt}:${password}`);
-    const digest = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+    const value = `${salt}:${password}`;
+    if (globalThis.crypto?.subtle && globalThis.TextEncoder) {
+        const data = new TextEncoder().encode(value);
+        const digest = await globalThis.crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+    }
+    let hash = 2166136261;
+    for (let index = 0; index < value.length; index++) {
+        hash ^= value.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+    }
+    return `fallback-${(hash >>> 0).toString(16)}`;
 }
 
 function setAuthMessage(message, isError = true) {
@@ -437,54 +447,64 @@ function setAuthMode(mode) {
 
 async function handleAuthSubmit(event) {
     event.preventDefault();
-    const username = normalizeUsername(document.getElementById('authUsername')?.value || '');
-    const password = document.getElementById('authPassword')?.value || '';
-    const confirmation = document.getElementById('authPasswordConfirm')?.value || '';
-    if (!/^[a-z0-9_]{3,24}$/.test(username)) {
-        setAuthMessage('Use de 3 a 24 caracteres: letras, números ou _.');
-        return;
+    const submit = document.getElementById('authSubmit');
+    if (submit?.disabled) return;
+    if (submit) {
+        submit.disabled = true;
+        submit.textContent = 'Carregando...';
     }
-    if (password.length < 6) {
-        setAuthMessage('A senha precisa ter pelo menos 6 caracteres.');
-        return;
-    }
-    if (authMode === 'register' && password !== confirmation) {
-        setAuthMessage('As senhas não são iguais.');
-        return;
-    }
-    const accounts = getAccounts();
-    if (authMode === 'register') {
-        if (accounts[username]) {
-            setAuthMessage('Esse usuário já está cadastrado.');
-            return;
-        }
-        const salt = createSalt();
-        accounts[username] = { salt, passwordHash: await hashPassword(password, salt), createdAt: Date.now(), lastLoginAt: Date.now() };
-        localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(accounts));
-    } else {
-        const account = accounts[username];
-        if (!account || account.passwordHash !== await hashPassword(password, account.salt)) {
-            setAuthMessage('Usuário ou senha inválidos.');
-            return;
-        }
-        account.lastLoginAt = Date.now();
-        localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(accounts));
-    }
-    currentUsername = username;
-    localStorage.setItem(ACTIVE_USER_KEY, username);
     try {
+        const username = normalizeUsername(document.getElementById('authUsername')?.value || '');
+        const password = document.getElementById('authPassword')?.value || '';
+        const confirmation = document.getElementById('authPasswordConfirm')?.value || '';
+        if (!/^[a-z0-9_]{3,24}$/.test(username)) {
+            setAuthMessage('Use de 3 a 24 caracteres: letras, números ou _.');
+            return;
+        }
+        if (password.length < 6) {
+            setAuthMessage('A senha precisa ter pelo menos 6 caracteres.');
+            return;
+        }
+        if (authMode === 'register' && password !== confirmation) {
+            setAuthMessage('As senhas não são iguais.');
+            return;
+        }
+        const accounts = getAccounts();
+        if (authMode === 'register') {
+            if (accounts[username]) {
+                setAuthMessage('Esse usuário já está cadastrado.');
+                return;
+            }
+            const salt = createSalt();
+            accounts[username] = { salt, passwordHash: await hashPassword(password, salt), createdAt: Date.now(), lastLoginAt: Date.now() };
+            localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(accounts));
+        } else {
+            const account = accounts[username];
+            if (!account || account.passwordHash !== await hashPassword(password, account.salt)) {
+                setAuthMessage('Usuário ou senha inválidos.');
+                return;
+            }
+            account.lastLoginAt = Date.now();
+            localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(accounts));
+        }
+        currentUsername = username;
+        localStorage.setItem(ACTIVE_USER_KEY, username);
         loadGame();
         positionPlayerAtFarmEntrance();
         updateCamera();
         renderer.render(scene, camera);
         renderUserHistory();
         document.getElementById('authScreen')?.classList.add('hidden');
+        setAuthMessage('');
     } catch (error) {
-        console.error('Falha ao iniciar a fazenda do usuário.', error);
-        setAuthMessage('Não foi possível carregar esta fazenda. Tente novamente.');
-        return;
+        console.error('Falha ao entrar na conta.', error);
+        setAuthMessage('Não foi possível entrar agora. Tente novamente.');
+    } finally {
+        if (submit) {
+            submit.disabled = false;
+            submit.textContent = authMode === 'register' ? 'Criar conta' : 'Entrar';
+        }
     }
-    setAuthMessage('');
 }
 
 function getUserSaveKey() {
