@@ -113,7 +113,7 @@
         .auth-tab { flex:1; border:1px solid #c8d4b8; border-radius:9px; padding:9px; background:#e4ead8; color:var(--field-forest); font:inherit; font-weight:bold; cursor:pointer; }
         .auth-tab.active { background:var(--field-forest); color:#fff; }
         .auth-form label { display:block; margin-top:10px; font-size:.86rem; font-weight:bold; }
-        .auth-form input { width:100%; margin-top:4px; padding:10px 11px; border:1px solid var(--field-paper-edge); border-radius:9px; background:#fffdf5; color:var(--field-ink); font:inherit; }
+        .auth-form #confirmPasswordField[hidden] { display:none !important; }
         .auth-submit { width:100%; margin-top:16px; border:0; border-radius:10px; padding:11px; background:var(--field-forest); color:#fff; font:inherit; font-weight:bold; cursor:pointer; }
         .auth-message { min-height:1.3em; margin:10px 0 0; color:#8f352b; font-size:.84rem; text-align:center; }
         .auth-user { margin:0 0 10px; color:#5b704e; font-size:.82rem; text-align:center; }
@@ -265,7 +265,7 @@
             <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
             <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
         </div>
-        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.8</div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.9</div>
         <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
             <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
                 <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
@@ -309,7 +309,7 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-const APP_VERSION = '1.0.8';
+const APP_VERSION = '1.0.9';
 const WORLD_GROUND_WIDTH = 240;
 const WORLD_GROUND_DEPTH = 180;
 const ENERGY_CAPACITY = 500;
@@ -472,9 +472,18 @@ async function handleAuthSubmit(event) {
     }
     currentUsername = username;
     localStorage.setItem(ACTIVE_USER_KEY, username);
-    loadGame();
-    renderUserHistory();
-    document.getElementById('authScreen')?.classList.add('hidden');
+    try {
+        loadGame();
+        positionPlayerAtFarmEntrance();
+        updateCamera();
+        renderer.render(scene, camera);
+        renderUserHistory();
+        document.getElementById('authScreen')?.classList.add('hidden');
+    } catch (error) {
+        console.error('Falha ao iniciar a fazenda do usuário.', error);
+        setAuthMessage('Não foi possível carregar esta fazenda. Tente novamente.');
+        return;
+    }
     setAuthMessage('');
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "cozy-farm-3d-mobile",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "private": true,
   "description": "Capacitor wrappers for Cozy Farm 3D on Android and iOS",
   "scripts": {
