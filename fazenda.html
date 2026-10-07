@@ -104,6 +104,20 @@
         .construction-editor-cancel { border:0; border-radius:8px; padding:8px 12px; background:#e7eccb; color:var(--field-ink); font:inherit; font-weight:bold; cursor:pointer; }
         body.construction-mode .ui-overlay > :not(#constructionEditor):not(#demolishCancel):not(#confirmDialog):not(.notification) { display:none !important; }
         body.construction-mode #demolishCancel.active { display:grid; }
+        .auth-screen { position:fixed; inset:0; z-index:500; display:grid; place-items:center; padding:18px; background:linear-gradient(180deg,rgba(112,184,214,.96),rgba(167,201,121,.98)); }
+        .auth-screen.hidden { display:none; }
+        .auth-card { width:min(390px,100%); padding:24px; border:1px solid var(--field-paper-edge); border-radius:20px; background:rgba(244,239,220,.98); box-shadow:0 16px 38px rgba(24,43,25,.35); color:var(--field-ink); }
+        .auth-brand { margin-bottom:4px; color:var(--field-forest); font-size:1.65rem; font-weight:bold; text-align:center; }
+        .auth-subtitle { margin:0 0 18px; color:#5b704e; text-align:center; }
+        .auth-tabs { display:flex; gap:6px; margin-bottom:14px; }
+        .auth-tab { flex:1; border:1px solid #c8d4b8; border-radius:9px; padding:9px; background:#e4ead8; color:var(--field-forest); font:inherit; font-weight:bold; cursor:pointer; }
+        .auth-tab.active { background:var(--field-forest); color:#fff; }
+        .auth-form label { display:block; margin-top:10px; font-size:.86rem; font-weight:bold; }
+        .auth-form input { width:100%; margin-top:4px; padding:10px 11px; border:1px solid var(--field-paper-edge); border-radius:9px; background:#fffdf5; color:var(--field-ink); font:inherit; }
+        .auth-submit { width:100%; margin-top:16px; border:0; border-radius:10px; padding:11px; background:var(--field-forest); color:#fff; font:inherit; font-weight:bold; cursor:pointer; }
+        .auth-message { min-height:1.3em; margin:10px 0 0; color:#8f352b; font-size:.84rem; text-align:center; }
+        .auth-user { margin:0 0 10px; color:#5b704e; font-size:.82rem; text-align:center; }
+        .history-box { margin-top:10px; padding:9px; border-radius:9px; background:#e8edcc; color:#476342; font-size:.78rem; line-height:1.4; }
         .app-version { position:fixed; right:10px; bottom:calc(6px + env(safe-area-inset-bottom)); z-index:145; max-width:45vw; overflow:hidden; padding:4px 8px; border:1px solid rgba(255,255,255,.28); border-radius:999px; background:rgba(29,51,34,.68); color:rgba(255,255,255,.94); font-size:.68rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.9); pointer-events:none; }
         .mobile-controls { display:none; }
         .mobile-joystick { position:relative; display:grid; width:100%; height:100%; place-items:center; border:2px solid rgba(255,255,255,.7); border-radius:50%; background:radial-gradient(circle,rgba(245,240,217,.38) 0 42%,rgba(29,51,34,.34) 44% 100%); box-shadow:0 4px 14px rgba(0,0,0,.28),inset 0 0 0 5px rgba(255,255,255,.14); touch-action:none; user-select:none; -webkit-user-select:none; }
@@ -152,6 +166,22 @@
     </style>
 </head>
 <body>
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-card">
+            <div class="auth-brand">🌱 Cozy Farm 3D</div>
+            <p class="auth-subtitle">Entre para continuar sua fazenda</p>
+            <div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button" onclick="setAuthMode('login')">Entrar</button><button class="auth-tab" id="registerTab" type="button" onclick="setAuthMode('register')">Cadastrar</button></div>
+            <form class="auth-form" id="authForm" onsubmit="handleAuthSubmit(event)">
+                <label for="authUsername">Nome de usuário</label>
+                <input id="authUsername" name="username" minlength="3" maxlength="24" autocomplete="username" required>
+                <label for="authPassword">Senha</label>
+                <input id="authPassword" name="password" type="password" minlength="6" autocomplete="current-password" required>
+                <div id="confirmPasswordField"><label for="authPasswordConfirm">Confirmar senha</label><input id="authPasswordConfirm" name="passwordConfirm" type="password" minlength="6" autocomplete="new-password"></div>
+                <button class="auth-submit" id="authSubmit" type="submit">Entrar</button>
+                <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
+            </form>
+        </div>
+    </div>
     <canvas id="gameCanvas"></canvas>
     <div class="ui-overlay">
         <div class="top-bar">
@@ -173,8 +203,11 @@
         </section>
         <button class="settings-btn" onclick="toggleSettings()" title="Configurações" aria-label="Configurações">⚙️</button>
         <div class="settings-panel" id="settingsPanel">
+            <p class="auth-user" id="authUserLabel"></p>
             <button class="settings-btn-action" onclick="saveGame()">💾 Salvar</button>
             <button class="settings-btn-action" onclick="resetGame()">🔄 Reiniciar</button>
+            <button class="settings-btn-action" onclick="logout()">🚪 Sair da conta</button>
+            <div class="history-box" id="historyBox">Nenhum histórico salvo.</div>
             <div class="settings-tip">
                 <strong>💡 Dica de controles</strong>
                 <span>W / seta para cima: andar para a frente</span>
@@ -232,7 +265,7 @@
             <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
             <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
         </div>
-        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.7</div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.8</div>
         <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
             <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
                 <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
@@ -276,7 +309,7 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-const APP_VERSION = '1.0.7';
+const APP_VERSION = '1.0.8';
 const WORLD_GROUND_WIDTH = 240;
 const WORLD_GROUND_DEPTH = 180;
 const ENERGY_CAPACITY = 500;
@@ -351,7 +384,126 @@ const gameState = {
     lastTime: 0,
 };
 
-const canvas = document.getElementById('gameCanvas');
+const AUTH_ACCOUNTS_KEY = 'cozyFarmAccounts';
+const ACTIVE_USER_KEY = 'cozyFarmActiveUser';
+let currentUsername = null;
+let authMode = 'login';
+
+function normalizeUsername(value) {
+    return value.trim().toLowerCase();
+}
+
+function getAccounts() {
+    try {
+        return JSON.parse(localStorage.getItem(AUTH_ACCOUNTS_KEY) || '{}');
+    } catch (error) {
+        return {};
+    }
+}
+
+function createSalt() {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashPassword(password, salt) {
+    const data = new TextEncoder().encode(`${salt}:${password}`);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function setAuthMessage(message, isError = true) {
+    const element = document.getElementById('authMessage');
+    if (element) {
+        element.textContent = message;
+        element.style.color = isError ? '#8f352b' : '#236b35';
+    }
+}
+
+function setAuthMode(mode) {
+    authMode = mode;
+    const registering = mode === 'register';
+    document.getElementById('loginTab')?.classList.toggle('active', !registering);
+    document.getElementById('registerTab')?.classList.toggle('active', registering);
+    const confirmField = document.getElementById('confirmPasswordField');
+    const confirmInput = document.getElementById('authPasswordConfirm');
+    if (confirmField) confirmField.hidden = !registering;
+    if (confirmInput) confirmInput.required = registering;
+    const submit = document.getElementById('authSubmit');
+    if (submit) submit.textContent = registering ? 'Criar conta' : 'Entrar';
+    setAuthMessage('');
+}
+
+async function handleAuthSubmit(event) {
+    event.preventDefault();
+    const username = normalizeUsername(document.getElementById('authUsername')?.value || '');
+    const password = document.getElementById('authPassword')?.value || '';
+    const confirmation = document.getElementById('authPasswordConfirm')?.value || '';
+    if (!/^[a-z0-9_]{3,24}$/.test(username)) {
+        setAuthMessage('Use de 3 a 24 caracteres: letras, números ou _.');
+        return;
+    }
+    if (password.length < 6) {
+        setAuthMessage('A senha precisa ter pelo menos 6 caracteres.');
+        return;
+    }
+    if (authMode === 'register' && password !== confirmation) {
+        setAuthMessage('As senhas não são iguais.');
+        return;
+    }
+    const accounts = getAccounts();
+    if (authMode === 'register') {
+        if (accounts[username]) {
+            setAuthMessage('Esse usuário já está cadastrado.');
+            return;
+        }
+        const salt = createSalt();
+        accounts[username] = { salt, passwordHash: await hashPassword(password, salt), createdAt: Date.now(), lastLoginAt: Date.now() };
+        localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(accounts));
+    } else {
+        const account = accounts[username];
+        if (!account || account.passwordHash !== await hashPassword(password, account.salt)) {
+            setAuthMessage('Usuário ou senha inválidos.');
+            return;
+        }
+        account.lastLoginAt = Date.now();
+        localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(accounts));
+    }
+    currentUsername = username;
+    localStorage.setItem(ACTIVE_USER_KEY, username);
+    loadGame();
+    renderUserHistory();
+    document.getElementById('authScreen')?.classList.add('hidden');
+    setAuthMessage('');
+}
+
+function getUserSaveKey() {
+    return currentUsername ? `fazendaSave:${encodeURIComponent(currentUsername)}` : 'fazendaSave:guest';
+}
+
+function renderUserHistory() {
+    const label = document.getElementById('authUserLabel');
+    if (label) label.textContent = currentUsername ? `Conta: ${currentUsername}` : '';
+    const box = document.getElementById('historyBox');
+    if (!box || !currentUsername) return;
+    try {
+        const save = JSON.parse(localStorage.getItem(getUserSaveKey()) || '{}');
+        const history = Array.isArray(save.history) ? save.history.slice(-5).reverse() : [];
+        box.innerHTML = history.length
+            ? `<strong>Histórico recente</strong><br>${history.map((item) => `${new Date(item.savedAt).toLocaleString('pt-BR')} · 💰 ${formatCompactNumber(item.coins)}`).join('<br>')}`
+            : 'Nenhum histórico salvo.';
+    } catch (error) {
+        box.textContent = 'Histórico indisponível.';
+    }
+}
+
+function logout() {
+    saveGameSilent();
+    localStorage.removeItem(ACTIVE_USER_KEY);
+    location.reload();
+}
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x76c4e5);
 scene.fog = new THREE.Fog(0x76c4e5, 55, 125);
@@ -768,6 +920,10 @@ function saveGameSilent() {
             coins: gameState.coins,
             gems: gameState.gems,
             energy: gameState.energy,
+            history: [
+                ...(JSON.parse(localStorage.getItem(getUserSaveKey()) || '{}').history || []),
+                { savedAt: Date.now(), coins: gameState.coins, energy: Math.floor(gameState.energy), marketSales: gameState.marketSales }
+            ].slice(-20),
             energyCapacity: ENERGY_CAPACITY,
             inventory: gameState.inventory,
             seeds: gameState.seeds,
@@ -796,7 +952,8 @@ function saveGameSilent() {
             })),
             soundMuted
         };
-        localStorage.setItem('fazendaSave', JSON.stringify(saveData));
+        localStorage.setItem(getUserSaveKey(), JSON.stringify(saveData));
+        renderUserHistory();
     } catch (error) {
         console.warn('Falha ao salvar', error);
     }
@@ -810,7 +967,7 @@ function saveGame() {
 }
 
 function loadGame() {
-    const raw = localStorage.getItem('fazendaSave');
+    const raw = localStorage.getItem(getUserSaveKey());
     if (!raw) return false;
     try {
         const saveData = JSON.parse(raw);
@@ -912,7 +1069,7 @@ function loadGame() {
 }
 
 function resetGame() {
-    localStorage.removeItem('fazendaSave');
+    localStorage.removeItem(getUserSaveKey());
     gameState.coins = 100;
     gameState.gems = 5;
     gameState.energy = ENERGY_CAPACITY;
@@ -2540,7 +2697,7 @@ function buildFarmEnvironment() {
         new THREE.MeshLambertMaterial({ map: grassTexture, color: 0xffffff })
     );
     land.rotation.x = -Math.PI / 2;
-    land.position.set(0, -0.22, 0);
+    land.position.set(0, -0.08, 0);
     land.receiveShadow = true;
     farmEnvironment.add(land);
 
@@ -2605,7 +2762,7 @@ function buildFarmEnvironment() {
             crown.castShadow = true;
             tree.add(crown);
         }
-        tree.position.set(x, 0, z);
+        tree.position.set(x, -0.08, z);
         farmEnvironment.add(tree);
     };
 
@@ -3469,6 +3626,13 @@ buildAnimalFarms();
 positionPlayerAtFarmEntrance();
 updateUI();
 updateSoundToggle();
+setAuthMode('login');
+const rememberedUser = localStorage.getItem(ACTIVE_USER_KEY);
+if (rememberedUser) {
+    const usernameInput = document.getElementById('authUsername');
+    if (usernameInput) usernameInput.value = rememberedUser;
+}
+
 animate();
 
 async function showActiveAppVersion() {

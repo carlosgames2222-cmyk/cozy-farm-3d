@@ -12,3 +12,6 @@ ios/DerivedData/
 /_tmp_script.js
 /snippet.txt
 /snippet2.txt
+
+# Local Netlify folder
+.netlify
