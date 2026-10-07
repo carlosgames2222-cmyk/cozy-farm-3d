@@ -102,7 +102,7 @@
         .construction-editor.demolish-mode { background:#7f2f2a; }
         .construction-editor-title { font-weight:bold; white-space:nowrap; }
         .construction-editor-cancel { border:0; border-radius:8px; padding:8px 12px; background:#e7eccb; color:var(--field-ink); font:inherit; font-weight:bold; cursor:pointer; }
-        body.construction-mode .ui-overlay > :not(#constructionEditor):not(#demolishCancel):not(.notification) { display:none !important; }
+        body.construction-mode .ui-overlay > :not(#constructionEditor):not(#demolishCancel):not(#confirmDialog):not(.notification) { display:none !important; }
         body.construction-mode #demolishCancel.active { display:grid; }
         .app-version { position:fixed; right:10px; bottom:calc(6px + env(safe-area-inset-bottom)); z-index:145; max-width:45vw; overflow:hidden; padding:4px 8px; border:1px solid rgba(255,255,255,.28); border-radius:999px; background:rgba(29,51,34,.68); color:rgba(255,255,255,.94); font-size:.68rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.9); pointer-events:none; }
         .mobile-controls { display:none; }
@@ -233,7 +233,7 @@
             <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
             <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
         </div>
-        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.5</div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.6</div>
         <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
             <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
                 <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
@@ -277,7 +277,7 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-const APP_VERSION = '1.0.5';
+const APP_VERSION = '1.0.6';
 const WORLD_GROUND_WIDTH = 240;
 const WORLD_GROUND_DEPTH = 180;
 const ENERGY_CAPACITY = 500;
