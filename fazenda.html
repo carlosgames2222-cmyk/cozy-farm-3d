@@ -265,7 +265,7 @@
             <button class="action-btn build" onclick="toggleBuildMenu()"><span>🏗️</span> Construir</button>
             <button class="action-btn shop" onclick="toggleShopMenu()"><span>🛒</span> Loja</button>
         </div>
-        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.10</div>
+        <div class="app-version" id="appVersion" aria-live="polite">Versão 1.0.11</div>
         <div class="mobile-controls" id="mobileControls" aria-label="Controles de movimento">
             <div class="mobile-joystick" id="mobileJoystick" role="application" aria-label="Analógico: para cima e para baixo anda; esquerda e direita vira">
                 <span class="mobile-joystick-knob" id="mobileJoystickKnob"></span>
@@ -309,7 +309,7 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-const APP_VERSION = '1.0.10';
+const APP_VERSION = '1.0.11';
 const WORLD_GROUND_WIDTH = 240;
 const WORLD_GROUND_DEPTH = 180;
 const ENERGY_CAPACITY = 500;
@@ -533,6 +533,7 @@ function logout() {
     location.reload();
 }
 
+const canvas = document.getElementById('gameCanvas');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x76c4e5);
 scene.fog = new THREE.Fog(0x76c4e5, 55, 125);
