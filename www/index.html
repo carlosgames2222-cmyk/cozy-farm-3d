@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Cozy Farm 3D - Next-Gen Visual Edition</title>
+    <title>Cozy Farm 3D - Ultimate Edition</title>
     <meta name="theme-color" content="#236b35">
     <style>
         :root {
@@ -12,13 +12,13 @@
             --field-leaf: #4b9b38;
             --field-paper: #f5f0d9;
             --field-paper-edge: #d6bc7f;
-            --field-shadow: rgba(24,43,25,.35);
+            --field-shadow: rgba(24,43,25,.32);
         }
         * { box-sizing: border-box; }
         html, body {
             margin: 0; width: 100%; height: 100%; overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #5eb5d8 0%, #9bc868 100%);
+            background: linear-gradient(180deg, #70b8d6 0%, #a7c979 100%);
             color: var(--field-ink);
             user-select: none;
         }
@@ -27,18 +27,18 @@
         
         .top-bar { display: flex; justify-content: center; gap: 12px; padding: 14px; pointer-events: all; }
         .resource-box {
-            background: rgba(30, 48, 32, 0.94);
+            background: rgba(30, 48, 32, 0.92);
             border: 2px solid rgba(244, 239, 220, 0.4);
             color: #fff; padding: 8px 16px; border-radius: 14px;
             display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1rem;
-            box-shadow: 0 6px 16px var(--field-shadow); backdrop-filter: blur(6px);
+            box-shadow: 0 6px 16px var(--field-shadow); backdrop-filter: blur(4px);
         }
         .resource-icon { font-size: 1.2em; }
         
         .action-bar {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 10px; pointer-events: all; align-items: center;
-            background: rgba(245, 240, 217, 0.96); border: 2px solid var(--field-paper-edge);
+            background: rgba(245, 240, 217, 0.95); border: 2px solid var(--field-paper-edge);
             padding: 10px 16px; border-radius: 22px; box-shadow: 0 10px 25px var(--field-shadow);
         }
         .action-btn {
@@ -87,7 +87,7 @@
     <canvas id="gameCanvas"></canvas>
     
     <div class="controls-hint">
-        <strong>🎮 Controlos:</strong><br>
+        <strong>🎮 Controles:</strong><br>
         • W / S ou Setas: Mover FRENTE / TRÁS<br>
         • A / D ou Setas: Virar ESQUERDA / DIREITA<br>
         • Clique na terra: Executar ação selecionada
@@ -115,7 +115,8 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="./vendor/three.min.js"></script>
+    <script src="./vendor/capacitor-updater.js"></script>
     <script>
         const GRID_SIZE = 7;
         const TILE_SIZE = 1.6;
@@ -136,8 +137,8 @@
 
         const canvas = document.getElementById('gameCanvas');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x6ec0e4);
-        scene.fog = new THREE.FogExp2(0x6ec0e4, 0.01);
+        scene.background = new THREE.Color(0x76c4e5);
+        scene.fog = new THREE.FogExp2(0x76c4e5, 0.012);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -145,133 +146,117 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.outputEncoding = THREE.sRGBEncoding;
 
-        // ILUMINAÇÃO SUAVE DE QUALIDADE
-        const ambientLight = new THREE.AmbientLight(0xfff7ea, 0.7);
+        const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.65);
         scene.add(ambientLight);
 
-        const sun = new THREE.DirectionalLight(0xfffae6, 0.95);
-        sun.position.set(30, 45, 25);
+        const sun = new THREE.DirectionalLight(0xfff0d0, 0.9);
+        sun.position.set(25, 35, 20);
         sun.castShadow = true;
         sun.shadow.mapSize.width = 2048;
         sun.shadow.mapSize.height = 2048;
         sun.shadow.camera.near = 0.5;
-        sun.shadow.camera.far = 100;
-        sun.shadow.camera.left = -30;
-        sun.shadow.camera.right = 30;
-        sun.shadow.camera.top = 30;
-        sun.shadow.camera.bottom = -30;
+        sun.shadow.camera.far = 90;
+        sun.shadow.camera.left = -25;
+        sun.shadow.camera.right = 25;
+        sun.shadow.camera.top = 25;
+        sun.shadow.camera.bottom = -25;
         scene.add(sun);
 
-        // AMBIENTE RICO E DETALHADO
         const environmentGroup = new THREE.Group();
         scene.add(environmentGroup);
 
         const ground = new THREE.Mesh(
-            new THREE.PlaneGeometry(140, 140),
-            new THREE.MeshLambertMaterial({ color: 0x569e3d })
+            new THREE.PlaneGeometry(120, 120),
+            new THREE.MeshLambertMaterial({ color: 0x5fa846 })
         );
         ground.rotation.x = -Math.PI / 2;
-        ground.position.y = -0.06;
+        ground.position.y = -0.05;
         ground.receiveShadow = true;
         environmentGroup.add(ground);
 
         const road = new THREE.Mesh(
-            new THREE.BoxGeometry(6.5, 0.03, 140),
-            new THREE.MeshLambertMaterial({ color: 0x6e4325 })
+            new THREE.BoxGeometry(6, 0.02, 120),
+            new THREE.MeshLambertMaterial({ color: 0x75441f })
         );
         road.position.set(-10, 0, 0);
         road.receiveShadow = true;
         environmentGroup.add(road);
 
-        // CRIAR ARVORES E ARBUSTOS DETALHADOS
-        function createDetailedTree(x, z) {
+        function createTree(x, z) {
             const tree = new THREE.Group();
             const trunk = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.25, 0.38, 1.8, 8),
-                new THREE.MeshLambertMaterial({ color: 0x543622 })
+                new THREE.CylinderGeometry(0.2, 0.3, 1.5, 8),
+                new THREE.MeshLambertMaterial({ color: 0x5b3c27 })
             );
-            trunk.position.y = 0.9;
+            trunk.position.y = 0.75;
             trunk.castShadow = true;
             tree.add(trunk);
 
-            for (let i = 0; i < 3; i++) {
-                const foliage = new THREE.Mesh(
-                    new THREE.DodecahedronGeometry(1.3 - i * 0.2, 1),
-                    new THREE.MeshLambertMaterial({ color: i === 0 ? 0x22733b : (i === 1 ? 0x2d8a48 : 0x3aa157) })
-                );
-                foliage.position.y = 2.0 + i * 0.6;
-                foliage.castShadow = true;
-                tree.add(foliage);
-            }
+            const foliage = new THREE.Mesh(
+                new THREE.DodecahedronGeometry(1.2, 1),
+                new THREE.MeshLambertMaterial({ color: 0x2e8b57 })
+            );
+            foliage.position.y = 2.2;
+            foliage.castShadow = true;
+            tree.add(foliage);
 
             tree.position.set(x, 0, z);
             environmentGroup.add(tree);
         }
 
-        for (let i = -60; i <= 60; i += 14) {
-            createDetailedTree(i, -22);
-            createDetailedTree(-24, i);
+        for (let i = -50; i <= 50; i += 12) {
+            createTree(i, -18);
+            createTree(-22, i);
         }
 
-        // CELEIRO RÚSTICO DETALHADO
         const barn = new THREE.Group();
         const barnBase = new THREE.Mesh(
-            new THREE.BoxGeometry(5.2, 3.2, 4.2),
-            new THREE.MeshLambertMaterial({ color: 0xc4352a })
+            new THREE.BoxGeometry(5, 3, 4),
+            new THREE.MeshLambertMaterial({ color: 0xc6382e })
         );
-        barnBase.position.y = 1.6;
+        barnBase.position.y = 1.5;
         barnBase.castShadow = true;
         barn.add(barnBase);
 
         const barnRoof = new THREE.Mesh(
-            new THREE.ConeGeometry(4.4, 2.4, 4),
-            new THREE.MeshLambertMaterial({ color: 0x1e826d })
+            new THREE.ConeGeometry(4, 2.2, 4),
+            new THREE.MeshLambertMaterial({ color: 0x2a9b83 })
         );
-        barnRoof.position.y = 4.4;
+        barnRoof.position.y = 4.1;
         barnRoof.rotation.y = Math.PI / 4;
         barnRoof.castShadow = true;
         barn.add(barnRoof);
-        barn.position.set(-9, 0, -9);
+        barn.position.set(-8, 0, -8);
         environmentGroup.add(barn);
 
-        // FEIRA / LOJINHA DA FAZENDA
         const stall = new THREE.Group();
         const counter = new THREE.Mesh(
-            new THREE.BoxGeometry(2.8, 1.1, 1.2),
-            new THREE.MeshLambertMaterial({ color: 0x7c5232 })
+            new THREE.BoxGeometry(2.5, 1, 1),
+            new THREE.MeshLambertMaterial({ color: 0x8b5e3c })
         );
-        counter.position.y = 0.55;
+        counter.position.y = 0.5;
         counter.castShadow = true;
         stall.add(counter);
         stall.position.set(-6, 0, 4);
         environmentGroup.add(stall);
 
-        // PERSONAGENDER ESTILIZADO COM BRAÇOS E PERNAS
         const player = new THREE.Group();
         const playerBody = new THREE.Mesh(
             new THREE.CylinderGeometry(0.35, 0.4, 1.1, 12),
-            new THREE.MeshLambertMaterial({ color: 0x117eb8 })
+            new THREE.MeshLambertMaterial({ color: 0x138bd1 })
         );
         playerBody.position.y = 0.55;
         playerBody.castShadow = true;
         player.add(playerBody);
 
         const playerHead = new THREE.Mesh(
-            new THREE.SphereGeometry(0.3, 14, 14),
-            new THREE.MeshLambertMaterial({ color: 0xf5cca0 })
+            new THREE.SphereGeometry(0.3, 12, 12),
+            new THREE.MeshLambertMaterial({ color: 0xf2c596 })
         );
         playerHead.position.y = 1.3;
         playerHead.castShadow = true;
         player.add(playerHead);
-
-        const playerHat = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.38, 0.42, 0.18, 12),
-            new THREE.MeshLambertMaterial({ color: 0xdd9236 })
-        );
-        playerHat.position.y = 1.55;
-        player.add(playerHat);
 
         player.position.set(2, 0, 2);
         scene.add(player);
@@ -282,8 +267,8 @@
         window.addEventListener('keyup', (e) => { keysPressed[e.code] = false; });
 
         function updatePlayerMovement() {
-            let moveSpeed = 0.085;
-            let rotSpeed = 0.045;
+            let moveSpeed = 0.08;
+            let rotSpeed = 0.04;
             let moving = false;
 
             if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) { playerHeading += rotSpeed; }
@@ -299,23 +284,22 @@
             }
             player.rotation.y = playerHeading;
 
-            const targetCamX = player.position.x + Math.sin(playerHeading) * -6.5;
-            const targetCamZ = player.position.z + Math.cos(playerHeading) * -6.5;
+            const targetCamX = player.position.x + Math.sin(playerHeading) * -6;
+            const targetCamZ = player.position.z + Math.cos(playerHeading) * -6;
             camera.position.x += (targetCamX - camera.position.x) * 0.1;
-            camera.position.y += (10.5 - camera.position.y) * 0.1;
+            camera.position.y += (10 - camera.position.y) * 0.1;
             camera.position.z += (targetCamZ - camera.position.z) * 0.1;
             camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
         }
 
-        // GRID DE PLANTAÇÃO COM 3 ESTADOS (GRAMA, ARADO, REGADO)
         const tiles = [];
         const tileMaterials = {
-            grass: new THREE.MeshLambertMaterial({ color: 0x67b54f }),
-            tilled: new THREE.MeshLambertMaterial({ color: 0x734a29 }),
+            grass: new THREE.MeshLambertMaterial({ color: 0x6bb854 }),
+            tilled: new THREE.MeshLambertMaterial({ color: 0x6e492b }),
             watered: new THREE.MeshLambertMaterial({ color: 0x3d2716 })
         };
 
-        const tileGeo = new THREE.BoxGeometry(TILE_SIZE - 0.1, 0.16, TILE_SIZE - 0.1);
+        const tileGeo = new THREE.BoxGeometry(TILE_SIZE - 0.1, 0.15, TILE_SIZE - 0.1);
         const gridOffset = (GRID_SIZE * TILE_SIZE) / 2 - TILE_SIZE / 2;
 
         for (let x = 0; x < GRID_SIZE; x++) {
@@ -339,16 +323,16 @@
 
         function createParticleBurst(pos, colorHex) {
             const group = new THREE.Group();
-            const pGeo = new THREE.BoxGeometry(0.12, 0.12, 0.12);
+            const pGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
             const pMat = new THREE.MeshBasicMaterial({ color: colorHex });
 
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 8; i++) {
                 const p = new THREE.Mesh(pGeo, pMat);
                 p.position.copy(pos);
                 p.userData.vel = new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.14,
-                    Math.random() * 0.14 + 0.05,
-                    (Math.random() - 0.5) * 0.14
+                    (Math.random() - 0.5) * 0.12,
+                    Math.random() * 0.12 + 0.04,
+                    (Math.random() - 0.5) * 0.12
                 );
                 group.add(p);
             }
@@ -359,7 +343,7 @@
                 ticks++;
                 group.children.forEach(p => {
                     p.position.add(p.userData.vel);
-                    p.scale.multiplyScalar(0.88);
+                    p.scale.multiplyScalar(0.9);
                 });
                 if (ticks > 25) {
                     clearInterval(interval);
@@ -393,7 +377,7 @@
                 if (data.state === 'grass') {
                     data.state = 'tilled';
                     tile.material = tileMaterials.tilled;
-                    createParticleBurst(tile.position, 0x734a29);
+                    createParticleBurst(tile.position, 0x6e492b);
                     notify('Terra arada com sucesso!');
                 }
             } 
@@ -408,10 +392,10 @@
                     updateUI();
 
                     const plantMesh = new THREE.Mesh(
-                        new THREE.ConeGeometry(0.28, 0.5, 6),
+                        new THREE.ConeGeometry(0.25, 0.45, 6),
                         new THREE.MeshLambertMaterial({ color: 0x4ade80 })
                     );
-                    plantMesh.position.set(tile.position.x, 0.22, tile.position.z);
+                    plantMesh.position.set(tile.position.x, 0.2, tile.position.z);
                     scene.add(plantMesh);
 
                     data.crop = { type: selectedCrop, mesh: plantMesh, progress: 0 };
@@ -425,7 +409,7 @@
                     data.state = 'watered';
                     tile.material = tileMaterials.watered;
                     createParticleBurst(tile.position, 0x3b82f6);
-                    notify('Terra regada! Crescimento 2x mais rápido.');
+                    notify('Terra regada! Crescimento acelerado.');
                 }
             } 
             else if (currentMode === 'harvest') {
@@ -492,7 +476,7 @@
                     const elapsed = (now - data.plantTime) / 1000;
                     data.crop.progress = Math.min(1, (elapsed * speedMultiplier) / info.growTime);
 
-                    const scale = 0.35 + data.crop.progress * 0.85;
+                    const scale = 0.3 + data.crop.progress * 0.9;
                     data.crop.mesh.scale.set(scale, scale, scale);
 
                     if (data.crop.progress >= 1) {
