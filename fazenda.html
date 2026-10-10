@@ -134,7 +134,6 @@
             corn: { name: 'Milho', color: 0xf2c631, growTime: 12, cost: 15, reward: 35 }
         };
 
-        // SETUP THREE.JS
         const canvas = document.getElementById('gameCanvas');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x76c4e5);
@@ -147,7 +146,6 @@
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        // ILUMINAÇÃO
         const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.65);
         scene.add(ambientLight);
 
@@ -164,7 +162,6 @@
         sun.shadow.camera.bottom = -25;
         scene.add(sun);
 
-        // AMBIENTE
         const environmentGroup = new THREE.Group();
         scene.add(environmentGroup);
 
@@ -212,7 +209,6 @@
             createTree(-22, i);
         }
 
-        // CELEIRO
         const barn = new THREE.Group();
         const barnBase = new THREE.Mesh(
             new THREE.BoxGeometry(5, 3, 4),
@@ -233,7 +229,6 @@
         barn.position.set(-8, 0, -8);
         environmentGroup.add(barn);
 
-        // FEIRA
         const stall = new THREE.Group();
         const counter = new THREE.Mesh(
             new THREE.BoxGeometry(2.5, 1, 1),
@@ -245,7 +240,6 @@
         stall.position.set(-6, 0, 4);
         environmentGroup.add(stall);
 
-        // JOGADOR
         const player = new THREE.Group();
         const playerBody = new THREE.Mesh(
             new THREE.CylinderGeometry(0.35, 0.4, 1.1, 12),
@@ -297,7 +291,6 @@
             camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
         }
 
-        // GRID DE PLANTAÇÃO
         const tiles = [];
         const tileMaterials = {
             grass: new THREE.MeshLambertMaterial({ color: 0x6bb854 }),
@@ -327,7 +320,6 @@
             }
         }
 
-        // EFEITOS
         function createParticleBurst(pos, colorHex) {
             const group = new THREE.Group();
             const pGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
@@ -359,7 +351,6 @@
             }, 30);
         }
 
-        // INTERAÇÃO
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
