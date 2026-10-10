@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Cozy Farm 3D - Edition</title>
+    <title>Cozy Farm 3D - Complete Edition</title>
     <meta name="theme-color" content="#236b35">
-    <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="icon" href="./icons/farm-icon.svg" type="image/svg+xml">
     <style>
         :root {
             --field-ink: #1d3322;
@@ -26,11 +24,12 @@
         }
         #gameCanvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
         .ui-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
-        .top-bar { display: flex; justify-content: center; gap: 10px; padding: 14px; pointer-events: all; }
+        
+        .top-bar { display: flex; justify-content: center; gap: 12px; padding: 14px; pointer-events: all; }
         .resource-box {
-            background: rgba(30, 48, 32, 0.88);
+            background: rgba(30, 48, 32, 0.9);
             border: 2px solid rgba(244, 239, 220, 0.4);
-            color: #fff; padding: 8px 14px; border-radius: 14px;
+            color: #fff; padding: 8px 16px; border-radius: 14px;
             display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1rem;
             box-shadow: 0 6px 16px var(--field-shadow); backdrop-filter: blur(4px);
         }
@@ -38,13 +37,13 @@
         
         .action-bar {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 8px; pointer-events: all; align-items: center;
-            background: rgba(245, 240, 217, 0.92); border: 2px solid var(--field-paper-edge);
-            padding: 8px 12px; border-radius: 20px; box-shadow: 0 8px 20px var(--field-shadow);
+            display: flex; gap: 10px; pointer-events: all; align-items: center;
+            background: rgba(245, 240, 217, 0.94); border: 2px solid var(--field-paper-edge);
+            padding: 10px 16px; border-radius: 22px; box-shadow: 0 10px 25px var(--field-shadow);
         }
         .action-btn {
             background: var(--field-forest); color: white; border: none;
-            padding: 10px 16px; border-radius: 12px; font-size: 0.95rem; font-weight: bold;
+            padding: 12px 18px; border-radius: 14px; font-size: 1rem; font-weight: bold;
             cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s ease;
         }
         .action-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
@@ -52,33 +51,47 @@
         .action-btn.plant { background: #278b43; }
         .action-btn.water { background: #2563eb; }
         .action-btn.harvest { background: #d97706; }
-        .action-btn.active { outline: 3px solid #ffde59; }
+        .action-btn.active { outline: 3px solid #ffde59; transform: scale(1.05); }
 
         .crop-selector-popup {
-            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.96); border: 2px solid var(--field-paper-edge);
-            padding: 10px; border-radius: 16px; display: none; gap: 8px; pointer-events: all;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            padding: 12px; border-radius: 18px; display: none; gap: 10px; pointer-events: all;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.25);
         }
         .crop-selector-popup.active { display: flex; }
         .crop-chip {
-            padding: 8px 12px; border-radius: 10px; border: 1px solid #ddd;
-            background: #fffdf5; cursor: pointer; font-weight: bold; font-size: 0.88rem;
-            display: flex; align-items: center; gap: 6px;
+            padding: 10px 14px; border-radius: 12px; border: 2px solid #ddd;
+            background: #fffdf5; cursor: pointer; font-weight: bold; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 6px; transition: all 0.1s;
         }
+        .crop-chip:hover { transform: translateY(-2px); }
         .crop-chip.active { border-color: var(--field-leaf); background: #eef5d8; }
 
         .notification {
-            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
-            background: var(--field-forest); color: white; padding: 10px 18px; border-radius: 12px;
-            box-shadow: 0 6px 16px var(--field-shadow); font-weight: bold; font-size: 0.9rem;
-            z-index: 200; animation: popup 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: fixed; top: 75px; left: 50%; transform: translateX(-50%);
+            background: var(--field-forest); color: white; padding: 10px 20px; border-radius: 12px;
+            box-shadow: 0 6px 16px var(--field-shadow); font-weight: bold; font-size: 0.95rem;
+            z-index: 200; animation: popup 0.3s cubic-brz(0.175, 0.885, 0.32, 1.275);
         }
         @keyframes popup { from { transform: translate(-50%, -20px) scale(0.8); opacity: 0; } to { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+
+        .controls-hint {
+            position: fixed; top: 16px; left: 16px; background: rgba(0,0,0,0.6); color: #fff;
+            padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; pointer-events: none; line-height: 1.4;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
+    
+    <div class="controls-hint">
+        <strong>🎮 Controles:</strong><br>
+        W / S ou Setas: Andar Frente/Trás<br>
+        A / D ou Esquerda/Direita: Virar personagem<br>
+        Clique na terra: Executar ação selecionada
+    </div>
+
     <div class="ui-overlay">
         <div class="top-bar">
             <div class="resource-box"><span class="resource-icon">💰</span><span id="coins">100</span></div>
@@ -87,10 +100,10 @@
         </div>
 
         <div class="crop-selector-popup" id="cropPopup">
-            <div class="crop-chip active" onclick="selectCrop('carrot')">🥕 Cenoura</div>
-            <div class="crop-chip" onclick="selectCrop('wheat')">🌾 Trigo</div>
-            <div class="crop-chip" onclick="selectCrop('tomato')">🍅 Tomate</div>
-            <div class="crop-chip" onclick="selectCrop('corn')">🌽 Milho</div>
+            <div class="crop-chip active" onclick="selectCrop('carrot')">🥕 Cenoura (Custo: 5)</div>
+            <div class="crop-chip" onclick="selectCrop('wheat')">🌾 Trigo (Custo: 8)</div>
+            <div class="crop-chip" onclick="selectCrop('tomato')">🍅 Tomate (Custo: 12)</div>
+            <div class="crop-chip" onclick="selectCrop('corn')">🌽 Milho (Custo: 15)</div>
         </div>
 
         <div class="action-bar">
@@ -103,7 +116,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // CONFIGURAÇÕES GERAIS
         const GRID_SIZE = 7;
         const TILE_SIZE = 1.6;
         let currentMode = 'till';
@@ -115,55 +127,181 @@
         };
 
         const CROP_DATA = {
-            carrot: { name: 'Cenoura', color: 0xff7f50, growTime: 6, cost: 5, reward: 12 },
-            wheat: { name: 'Trigo', color: 0xdaa520, growTime: 8, cost: 8, reward: 18 },
-            tomato: { name: 'Tomate', color: 0xdc143c, growTime: 12, cost: 12, reward: 28 },
-            corn: { name: 'Milho', color: 0xf2c631, growTime: 15, cost: 15, reward: 35 }
+            carrot: { name: 'Cenoura', color: 0xff7f50, growTime: 5, cost: 5, reward: 12 },
+            wheat: { name: 'Trigo', color: 0xdaa520, growTime: 7, cost: 8, reward: 18 },
+            tomato: { name: 'Tomate', color: 0xdc143c, growTime: 10, cost: 12, reward: 28 },
+            corn: { name: 'Milho', color: 0xf2c631, growTime: 12, cost: 15, reward: 35 }
         };
 
-        // THREE.JS SETUP
+        // SETUP DO THREE.JS
         const canvas = document.getElementById('gameCanvas');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x76c4e5);
-        scene.fog = new THREE.FogExp2(0x76c4e5, 0.015);
+        scene.fog = new THREE.FogExp2(0x76c4e5, 0.012);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(12, 16, 16);
-        camera.lookAt(0, 0, 0);
-
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        // ILUMINAÇÃO
-        const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.5);
+        // ILUMINAÇÃO RÚSTICA DE FAZENDA
+        const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.6);
         scene.add(ambientLight);
 
-        const sun = new THREE.DirectionalLight(0xfff0d0, 0.9);
-        sun.position.set(20, 30, 15);
+        const sun = new THREE.DirectionalLight(0xfff0d0, 0.85);
+        sun.position.set(25, 35, 20);
         sun.castShadow = true;
         sun.shadow.mapSize.width = 2048;
         sun.shadow.mapSize.height = 2048;
         sun.shadow.camera.near = 0.5;
-        sun.shadow.camera.far = 80;
-        sun.shadow.camera.left = -18;
-        sun.shadow.camera.right = 18;
-        sun.shadow.camera.top = 18;
-        sun.shadow.camera.bottom = -18;
+        sun.shadow.camera.far = 90;
+        sun.shadow.camera.left = -25;
+        sun.shadow.camera.right = 25;
+        sun.shadow.camera.top = 25;
+        sun.shadow.camera.bottom = -25;
         scene.add(sun);
 
-        // TERRENO & GRAMA
-        const groundGeo = new THREE.PlaneGeometry(100, 100);
-        const groundMat = new THREE.MeshLambertMaterial({ color: 0x5ba348 });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.position.y = -0.1;
-        ground.receiveShadow = true;
-        scene.add(ground);
+        // --- CONSTRUÇÃO DO AMBIENTE 3D (CENÁRIO DA FAZENDA) ---
+        const environmentGroup = new THREE.Group();
+        scene.add(environmentGroup);
 
-        // GRID DE PLANTAÇÃO (ESTADOS DE TERRA)
+        // Chão de grama principal
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(120, 120),
+            new THREE.MeshLambertMaterial({ color: 0x5fa846 })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.05;
+        ground.receiveShadow = true;
+        environmentGroup.add(ground);
+
+        // Estrada de terra lateral
+        const road = new THREE.Mesh(
+            new THREE.BoxGeometry(6, 0.02, 120),
+            new THREE.MeshLambertMaterial({ color: 0x75441f })
+        );
+        road.position.set(-10, 0, 0);
+        road.receiveShadow = true;
+        environmentGroup.add(road);
+
+        // Função para criar árvores 3D estilizadas
+        function createTree(x, z) {
+            const tree = new THREE.Group();
+            const trunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.2, 0.3, 1.5, 8),
+                new THREE.MeshLambertMaterial({ color: 0x5b3c27 })
+            );
+            trunk.position.y = 0.75;
+            trunk.castShadow = true;
+            tree.add(trunk);
+
+            const foliage = new THREE.Mesh(
+                new THREE.DodecahedronGeometry(1.2, 1),
+                new THREE.MeshLambertMaterial({ color: 0x2e8b57 })
+            );
+            foliage.position.y = 2.2;
+            foliage.castShadow = true;
+            tree.add(foliage);
+
+            tree.position.set(x, 0, z);
+            environmentGroup.add(tree);
+        }
+
+        // Criar floresta ao redor
+        for (let i = -50; i <= 50; i += 12) {
+            createTree(i, -18);
+            createTree(-22, i);
+        }
+
+        // Celeiro 3D rústico
+        const barn = new THREE.Group();
+        const barnBase = new THREE.Mesh(
+            new THREE.BoxGeometry(5, 3, 4),
+            new THREE.MeshLambertMaterial({ color: 0xc6382e })
+        );
+        barnBase.position.y = 1.5;
+        barnBase.castShadow = true;
+        barn.add(barnBase);
+
+        const barnRoof = new THREE.Mesh(
+            new THREE.ConeGeometry(4, 2.2, 4),
+            new THREE.MeshLambertMaterial({ color: 0x2a9b83 })
+        );
+        barnRoof.position.y = 4.1;
+        barnRoof.rotation.y = Math.PI / 4;
+        barnRoof.castShadow = true;
+        barn.add(barnRoof);
+        barn.position.set(-8, 0, -8);
+        environmentGroup.add(barn);
+
+        // Lojinha / Feira da Fazenda
+        const stall = new THREE.Group();
+        const counter = new THREE.Mesh(
+            new THREE.BoxGeometry(2.5, 1, 1),
+            new THREE.MeshLambertMaterial({ color: 0x8b5e3c })
+        );
+        counter.position.y = 0.5;
+        counter.castShadow = true;
+        stall.add(counter);
+        stall.position.set(-6, 0, 4);
+        environmentGroup.add(stall);
+
+        // --- PERSONAGEM CONTROLÁVEL (JOGADOR) ---
+        const player = new THREE.Group();
+        const playerBody = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.35, 0.4, 1.1, 12),
+            new THREE.MeshLambertMaterial({ color: 0x138bd1 })
+        );
+        playerBody.position.y = 0.55;
+        playerBody.castShadow = true;
+        player.add(playerBody);
+
+        const playerHead = new THREE.Mesh(
+            new THREE.SphereGeometry(0.3, 12, 12),
+            new THREE.MeshLambertMaterial({ color: 0xf2c596 })
+        );
+        playerHead.position.y = 1.3;
+        playerHead.castShadow = true;
+        player.add(playerHead);
+
+        player.position.set(2, 0, 2);
+        scene.add(player);
+
+        let playerHeading = 0;
+        const keysPressed = {};
+        window.addEventListener('keydown', (e) => { keysPressed[e.code] = true; });
+        window.addEventListener('keyup', (e) => { keysPressed[e.code] = false; });
+
+        function updatePlayerMovement() {
+            let moveSpeed = 0.08;
+            let rotSpeed = 0.04;
+            let moving = false;
+
+            if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) { playerHeading += rotSpeed; }
+            if (keysPressed['KeyD'] || keysPressed['ArrowRight']) { playerHeading -= rotSpeed; }
+
+            let currentDir = 0;
+            if (keysPressed['KeyW'] || keysPressed['ArrowUp']) { currentDir = 1; moving = true; }
+            if (keysPressed['KeyS'] || keysPressed['ArrowDown']) { currentDir = -1; moving = true; }
+
+            if (moving) {
+                player.position.x += Math.sin(playerHeading) * moveSpeed * currentDir;
+                player.position.z += Math.cos(playerHeading) * moveSpeed * currentDir;
+            }
+            player.rotation.y = playerHeading;
+
+            // Câmera seguindo o jogador suavemente
+            const targetCamX = player.position.x + Math.sin(playerHeading) * -6;
+            const targetCamZ = player.position.z + Math.cos(playerHeading) * -6;
+            camera.position.x += (targetCamX - camera.position.x) * 0.1;
+            camera.position.y += (10 - camera.position.y) * 0.1;
+            camera.position.z += (targetCamZ - camera.position.z) * 0.1;
+            camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
+        }
+
+        // --- GRID DE PLANTAÇÃO (ESTADOS DE TERRA) ---
         const tiles = [];
         const tileMaterials = {
             grass: new THREE.MeshLambertMaterial({ color: 0x6bb854 }),
@@ -172,21 +310,20 @@
         };
 
         const tileGeo = new THREE.BoxGeometry(TILE_SIZE - 0.1, 0.15, TILE_SIZE - 0.1);
-        const offset = (GRID_SIZE * TILE_SIZE) / 2 - TILE_SIZE / 2;
+        const gridOffset = (GRID_SIZE * TILE_SIZE) / 2 - TILE_SIZE / 2;
 
         for (let x = 0; x < GRID_SIZE; x++) {
             for (let z = 0; z < GRID_SIZE; z++) {
                 const mesh = new THREE.Mesh(tileGeo, tileMaterials.grass);
-                mesh.position.set(x * TILE_SIZE - offset, 0, z * TILE_SIZE - offset);
+                mesh.position.set(x * TILE_SIZE - gridOffset, 0, z * TILE_SIZE - gridOffset + 2);
                 mesh.receiveShadow = true;
                 mesh.castShadow = true;
                 
                 mesh.userData = {
                     x, z,
-                    state: 'grass', // 'grass', 'tilled', 'watered'
+                    state: 'grass',
                     crop: null,
                     plantTime: 0,
-                    watered: false,
                     mesh
                 };
                 scene.add(mesh);
@@ -194,7 +331,7 @@
             }
         }
 
-        // PARTICULAS SIMPLES
+        // PARTÍCULAS DE EFEITO
         function createParticleBurst(pos, colorHex) {
             const group = new THREE.Group();
             const pGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
@@ -204,9 +341,9 @@
                 const p = new THREE.Mesh(pGeo, pMat);
                 p.position.copy(pos);
                 p.userData.vel = new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.1,
-                    Math.random() * 0.1 + 0.05,
-                    (Math.random() - 0.5) * 0.1
+                    (Math.random() - 0.5) * 0.12,
+                    Math.random() * 0.12 + 0.04,
+                    (Math.random() - 0.5) * 0.12
                 );
                 group.add(p);
             }
@@ -219,19 +356,19 @@
                     p.position.add(p.userData.vel);
                     p.scale.multiplyScalar(0.9);
                 });
-                if (ticks > 20) {
+                if (ticks > 25) {
                     clearInterval(interval);
                     scene.remove(group);
                 }
             }, 30);
         }
 
-        // INTERAÇÕES & CLIQUES
+        // INTERAÇÕES POR CLIQUE
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
         window.addEventListener('pointerdown', (e) => {
-            if (e.target.tagName === 'BUTTON' || e.target.closest('.ui-overlay')) return;
+            if (e.target.tagName === 'BUTTON' || e.target.closest('.ui-overlay') || e.target.closest('.controls-hint')) return;
 
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -253,7 +390,7 @@
                     data.state = 'tilled';
                     tile.material = tileMaterials.tilled;
                     createParticleBurst(tile.position, 0x6e492b);
-                    notify('Terra arada!');
+                    notify('Terra arada com sucesso!');
                 }
             } 
             else if (currentMode === 'plant') {
@@ -266,9 +403,8 @@
                     state.coins -= info.cost;
                     updateUI();
 
-                    // Criar objeto visual do broto
                     const plantMesh = new THREE.Mesh(
-                        new THREE.ConeGeometry(0.2, 0.4, 5),
+                        new THREE.ConeGeometry(0.25, 0.45, 6),
                         new THREE.MeshLambertMaterial({ color: 0x4ade80 })
                     );
                     plantMesh.position.set(tile.position.x, 0.2, tile.position.z);
@@ -285,7 +421,7 @@
                     data.state = 'watered';
                     tile.material = tileMaterials.watered;
                     createParticleBurst(tile.position, 0x3b82f6);
-                    notify('Terra regada!');
+                    notify('Terra regada! Crescimento acelerado.');
                 }
             } 
             else if (currentMode === 'harvest') {
@@ -330,7 +466,7 @@
             el.style.background = color;
             el.textContent = text;
             document.body.appendChild(el);
-            setTimeout(() => el.remove(), 2000);
+            setTimeout(() => el.remove(), 2200);
         }
 
         function updateUI() {
@@ -339,25 +475,24 @@
             document.getElementById('energy').textContent = state.energy;
         }
 
-        // LOOP DE ANIMAÇÃO & ATUALIZAÇÕES
+        // LOOP PRINCIPAL DE ANIMAÇÃO
         function animate() {
             requestAnimationFrame(animate);
 
-            // Atualizar crescimento das plantas
+            updatePlayerMovement();
+
             const now = Date.now();
             tiles.forEach(tile => {
                 const data = tile.userData;
                 if (data.crop && data.crop.progress < 1) {
                     const info = CROP_DATA[data.crop.type];
-                    const speedMultiplier = data.state === 'watered' ? 2 : 1; // Água acelera crescimento
+                    const speedMultiplier = data.state === 'watered' ? 2 : 1; // Regado cresce 2x mais rápido
                     const elapsed = (now - data.plantTime) / 1000;
                     data.crop.progress = Math.min(1, (elapsed * speedMultiplier) / info.growTime);
 
-                    // Aumenta escala com o crescimento
                     const scale = 0.3 + data.crop.progress * 0.9;
                     data.crop.mesh.scale.set(scale, scale, scale);
 
-                    // Trocar para a cor madura ao finalizar
                     if (data.crop.progress >= 1) {
                         data.crop.mesh.material.color.setHex(info.color);
                     }
@@ -374,6 +509,7 @@
         });
 
         setMode('till');
+        updateUI();
         animate();
     </script>
 </body>
